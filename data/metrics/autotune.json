@@ -1,0 +1,554 @@
+{
+  "config": {
+    "objective": "max mean quality_score of gate-pass rows, subject to keep_rate >= min_keep",
+    "min_keep": 0.5,
+    "budget": 24,
+    "seed": 2026,
+    "grid": {
+      "clean.max_link_density": [
+        0.1,
+        0.2,
+        0.3,
+        0.5
+      ],
+      "clean.min_cjk_chars": [
+        5,
+        10,
+        20,
+        30,
+        50,
+        80
+      ],
+      "clean.min_han_ratio": [
+        0.0,
+        0.2,
+        0.3,
+        0.5
+      ],
+      "quality.min_dim_score": [
+        0.2,
+        0.3,
+        0.4,
+        0.5
+      ],
+      "quality.min_total_score": [
+        0.45,
+        0.5,
+        0.55,
+        0.6,
+        0.65,
+        0.7
+      ]
+    },
+    "excluded_knobs": {
+      "dedup.verify_threshold": "预览跳过 MinHash，无签名可算去重率；放进来只会造假信号"
+    },
+    "sample": 10000
+  },
+  "baseline": {
+    "index": 0,
+    "baseline": true,
+    "overrides": {},
+    "n": 10000,
+    "pass": 8168,
+    "keep_rate": 0.8168,
+    "mean_quality": 0.943373,
+    "feasible": true
+  },
+  "best": {
+    "index": 22,
+    "baseline": false,
+    "overrides": {
+      "clean": {
+        "max_link_density": 0.2,
+        "min_cjk_chars": 20,
+        "min_han_ratio": 0.5
+      },
+      "quality": {
+        "min_dim_score": 0.5,
+        "min_total_score": 0.6
+      }
+    },
+    "n": 10000,
+    "pass": 7087,
+    "keep_rate": 0.7087,
+    "mean_quality": 0.955492,
+    "feasible": true
+  },
+  "improvement": {
+    "mean_quality": 0.012119,
+    "keep_rate": -0.1081
+  },
+  "history": [
+    {
+      "index": 0,
+      "baseline": true,
+      "overrides": {},
+      "n": 10000,
+      "pass": 8168,
+      "keep_rate": 0.8168,
+      "mean_quality": 0.943373,
+      "feasible": true
+    },
+    {
+      "index": 1,
+      "baseline": false,
+      "overrides": {
+        "clean": {
+          "max_link_density": 0.1,
+          "min_cjk_chars": 80,
+          "min_han_ratio": 0.0
+        },
+        "quality": {
+          "min_dim_score": 0.3,
+          "min_total_score": 0.5
+        }
+      },
+      "n": 10000,
+      "pass": 7912,
+      "keep_rate": 0.7912,
+      "mean_quality": 0.9429,
+      "feasible": true
+    },
+    {
+      "index": 2,
+      "baseline": false,
+      "overrides": {
+        "clean": {
+          "max_link_density": 0.3,
+          "min_cjk_chars": 10,
+          "min_han_ratio": 0.3
+        },
+        "quality": {
+          "min_dim_score": 0.4,
+          "min_total_score": 0.45
+        }
+      },
+      "n": 10000,
+      "pass": 7714,
+      "keep_rate": 0.7714,
+      "mean_quality": 0.949594,
+      "feasible": true
+    },
+    {
+      "index": 3,
+      "baseline": false,
+      "overrides": {
+        "clean": {
+          "max_link_density": 0.5,
+          "min_cjk_chars": 30,
+          "min_han_ratio": 0.2
+        },
+        "quality": {
+          "min_dim_score": 0.5,
+          "min_total_score": 0.45
+        }
+      },
+      "n": 10000,
+      "pass": 7287,
+      "keep_rate": 0.7287,
+      "mean_quality": 0.954676,
+      "feasible": true
+    },
+    {
+      "index": 4,
+      "baseline": false,
+      "overrides": {
+        "clean": {
+          "max_link_density": 0.5,
+          "min_cjk_chars": 30,
+          "min_han_ratio": 0.5
+        },
+        "quality": {
+          "min_dim_score": 0.3,
+          "min_total_score": 0.55
+        }
+      },
+      "n": 10000,
+      "pass": 7842,
+      "keep_rate": 0.7842,
+      "mean_quality": 0.944876,
+      "feasible": true
+    },
+    {
+      "index": 5,
+      "baseline": false,
+      "overrides": {
+        "clean": {
+          "max_link_density": 0.1,
+          "min_cjk_chars": 50,
+          "min_han_ratio": 0.2
+        },
+        "quality": {
+          "min_dim_score": 0.4,
+          "min_total_score": 0.45
+        }
+      },
+      "n": 10000,
+      "pass": 7634,
+      "keep_rate": 0.7634,
+      "mean_quality": 0.949426,
+      "feasible": true
+    },
+    {
+      "index": 6,
+      "baseline": false,
+      "overrides": {
+        "clean": {
+          "max_link_density": 0.2,
+          "min_cjk_chars": 30,
+          "min_han_ratio": 0.3
+        },
+        "quality": {
+          "min_dim_score": 0.2,
+          "min_total_score": 0.55
+        }
+      },
+      "n": 10000,
+      "pass": 8599,
+      "keep_rate": 0.8599,
+      "mean_quality": 0.936172,
+      "feasible": true
+    },
+    {
+      "index": 7,
+      "baseline": false,
+      "overrides": {
+        "clean": {
+          "max_link_density": 0.5,
+          "min_cjk_chars": 80,
+          "min_han_ratio": 0.3
+        },
+        "quality": {
+          "min_dim_score": 0.5,
+          "min_total_score": 0.7
+        }
+      },
+      "n": 10000,
+      "pass": 7033,
+      "keep_rate": 0.7033,
+      "mean_quality": 0.954627,
+      "feasible": true
+    },
+    {
+      "index": 8,
+      "baseline": false,
+      "overrides": {
+        "clean": {
+          "max_link_density": 0.3,
+          "min_cjk_chars": 80,
+          "min_han_ratio": 0.5
+        },
+        "quality": {
+          "min_dim_score": 0.5,
+          "min_total_score": 0.45
+        }
+      },
+      "n": 10000,
+      "pass": 6848,
+      "keep_rate": 0.6848,
+      "mean_quality": 0.95534,
+      "feasible": true
+    },
+    {
+      "index": 9,
+      "baseline": false,
+      "overrides": {
+        "clean": {
+          "max_link_density": 0.5,
+          "min_cjk_chars": 80,
+          "min_han_ratio": 0.2
+        },
+        "quality": {
+          "min_dim_score": 0.3,
+          "min_total_score": 0.7
+        }
+      },
+      "n": 10000,
+      "pass": 7917,
+      "keep_rate": 0.7917,
+      "mean_quality": 0.942919,
+      "feasible": true
+    },
+    {
+      "index": 10,
+      "baseline": false,
+      "overrides": {
+        "clean": {
+          "max_link_density": 0.5,
+          "min_cjk_chars": 20,
+          "min_han_ratio": 0.5
+        },
+        "quality": {
+          "min_dim_score": 0.5,
+          "min_total_score": 0.45
+        }
+      },
+      "n": 10000,
+      "pass": 7090,
+      "keep_rate": 0.709,
+      "mean_quality": 0.955476,
+      "feasible": true
+    },
+    {
+      "index": 11,
+      "baseline": false,
+      "overrides": {
+        "clean": {
+          "max_link_density": 0.5,
+          "min_cjk_chars": 5,
+          "min_han_ratio": 0.5
+        },
+        "quality": {
+          "min_dim_score": 0.3,
+          "min_total_score": 0.45
+        }
+      },
+      "n": 10000,
+      "pass": 7863,
+      "keep_rate": 0.7863,
+      "mean_quality": 0.944936,
+      "feasible": true
+    },
+    {
+      "index": 12,
+      "baseline": false,
+      "overrides": {
+        "clean": {
+          "max_link_density": 0.2,
+          "min_cjk_chars": 50,
+          "min_han_ratio": 0.0
+        },
+        "quality": {
+          "min_dim_score": 0.5,
+          "min_total_score": 0.65
+        }
+      },
+      "n": 10000,
+      "pass": 7228,
+      "keep_rate": 0.7228,
+      "mean_quality": 0.954644,
+      "feasible": true
+    },
+    {
+      "index": 13,
+      "baseline": false,
+      "overrides": {
+        "clean": {
+          "max_link_density": 0.1,
+          "min_cjk_chars": 5,
+          "min_han_ratio": 0.0
+        },
+        "quality": {
+          "min_dim_score": 0.3,
+          "min_total_score": 0.65
+        }
+      },
+      "n": 10000,
+      "pass": 8184,
+      "keep_rate": 0.8184,
+      "mean_quality": 0.943256,
+      "feasible": true
+    },
+    {
+      "index": 14,
+      "baseline": false,
+      "overrides": {
+        "clean": {
+          "max_link_density": 0.1,
+          "min_cjk_chars": 30,
+          "min_han_ratio": 0.2
+        },
+        "quality": {
+          "min_dim_score": 0.5,
+          "min_total_score": 0.45
+        }
+      },
+      "n": 10000,
+      "pass": 7269,
+      "keep_rate": 0.7269,
+      "mean_quality": 0.95474,
+      "feasible": true
+    },
+    {
+      "index": 15,
+      "baseline": false,
+      "overrides": {
+        "clean": {
+          "max_link_density": 0.1,
+          "min_cjk_chars": 50,
+          "min_han_ratio": 0.3
+        },
+        "quality": {
+          "min_dim_score": 0.5,
+          "min_total_score": 0.6
+        }
+      },
+      "n": 10000,
+      "pass": 7190,
+      "keep_rate": 0.719,
+      "mean_quality": 0.954783,
+      "feasible": true
+    },
+    {
+      "index": 16,
+      "baseline": false,
+      "overrides": {
+        "clean": {
+          "max_link_density": 0.3,
+          "min_cjk_chars": 5,
+          "min_han_ratio": 0.2
+        },
+        "quality": {
+          "min_dim_score": 0.2,
+          "min_total_score": 0.45
+        }
+      },
+      "n": 10000,
+      "pass": 8678,
+      "keep_rate": 0.8678,
+      "mean_quality": 0.935793,
+      "feasible": true
+    },
+    {
+      "index": 17,
+      "baseline": false,
+      "overrides": {
+        "clean": {
+          "max_link_density": 0.1,
+          "min_cjk_chars": 50,
+          "min_han_ratio": 0.0
+        },
+        "quality": {
+          "min_dim_score": 0.4,
+          "min_total_score": 0.7
+        }
+      },
+      "n": 10000,
+      "pass": 7650,
+      "keep_rate": 0.765,
+      "mean_quality": 0.949338,
+      "feasible": true
+    },
+    {
+      "index": 18,
+      "baseline": false,
+      "overrides": {
+        "clean": {
+          "max_link_density": 0.5,
+          "min_cjk_chars": 10,
+          "min_han_ratio": 0.0
+        },
+        "quality": {
+          "min_dim_score": 0.4,
+          "min_total_score": 0.7
+        }
+      },
+      "n": 10000,
+      "pass": 7759,
+      "keep_rate": 0.7759,
+      "mean_quality": 0.94936,
+      "feasible": true
+    },
+    {
+      "index": 19,
+      "baseline": false,
+      "overrides": {
+        "clean": {
+          "max_link_density": 0.1,
+          "min_cjk_chars": 5,
+          "min_han_ratio": 0.2
+        },
+        "quality": {
+          "min_dim_score": 0.5,
+          "min_total_score": 0.7
+        }
+      },
+      "n": 10000,
+      "pass": 7294,
+      "keep_rate": 0.7294,
+      "mean_quality": 0.954771,
+      "feasible": true
+    },
+    {
+      "index": 20,
+      "baseline": false,
+      "overrides": {
+        "clean": {
+          "max_link_density": 0.5,
+          "min_cjk_chars": 20,
+          "min_han_ratio": 0.5
+        },
+        "quality": {
+          "min_dim_score": 0.4,
+          "min_total_score": 0.65
+        }
+      },
+      "n": 10000,
+      "pass": 7473,
+      "keep_rate": 0.7473,
+      "mean_quality": 0.950597,
+      "feasible": true
+    },
+    {
+      "index": 21,
+      "baseline": false,
+      "overrides": {
+        "clean": {
+          "max_link_density": 0.3,
+          "min_cjk_chars": 10,
+          "min_han_ratio": 0.2
+        },
+        "quality": {
+          "min_dim_score": 0.4,
+          "min_total_score": 0.6
+        }
+      },
+      "n": 10000,
+      "pass": 7736,
+      "keep_rate": 0.7736,
+      "mean_quality": 0.94948,
+      "feasible": true
+    },
+    {
+      "index": 22,
+      "baseline": false,
+      "overrides": {
+        "clean": {
+          "max_link_density": 0.2,
+          "min_cjk_chars": 20,
+          "min_han_ratio": 0.5
+        },
+        "quality": {
+          "min_dim_score": 0.5,
+          "min_total_score": 0.6
+        }
+      },
+      "n": 10000,
+      "pass": 7087,
+      "keep_rate": 0.7087,
+      "mean_quality": 0.955492,
+      "feasible": true
+    },
+    {
+      "index": 23,
+      "baseline": false,
+      "overrides": {
+        "clean": {
+          "max_link_density": 0.3,
+          "min_cjk_chars": 50,
+          "min_han_ratio": 0.5
+        },
+        "quality": {
+          "min_dim_score": 0.5,
+          "min_total_score": 0.5
+        }
+      },
+      "n": 10000,
+      "pass": 7010,
+      "keep_rate": 0.701,
+      "mean_quality": 0.955411,
+      "feasible": true
+    }
+  ]
+}

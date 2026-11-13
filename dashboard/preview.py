@@ -115,7 +115,10 @@ def run_preview(overrides: dict | None = None, n_sample: int = 10000,
     """跑预览。返回统计 dict，供控制台展示。
 
     overrides: {类别: {旋钮键: 新值}}，None = 用当前配置。
-    返回: {n_sample, clean: {kept, removed, by_rule, pii}, quality: {pass, hold, remove}}
+    返回: {n_sample, n_read, clean: {kept, removed, by_rule, pii},
+           quality: {pass, hold, remove, pass_score_sum, dim_sums}}
+    n_sample 是请求行数，n_read 是实际读到的行数（样本不足时二者不等）；
+    pass_score_sum / dim_sums 供带约束的自动搜索比较「放行行的质量」。
     """
     from clean import rules as rule_fns
     from clean.base import apply_rules
@@ -135,8 +138,12 @@ def run_preview(overrides: dict | None = None, n_sample: int = 10000,
     clean_stats = {"kept": 0, "removed": 0, "by_rule": {}, "pii": 0}
     qual_stats = {"pass": 0, "hold": 0, "remove": 0}
     qual_weights = qual_cfg["weights"]
+    pass_score_sum = 0.0
+    dim_sums: dict[str, float] = {}
+    n_read = 0
 
     for row in _sample_raw_rows(n_sample, seed):
+        n_read += 1
         # ---- clean 规则链（直接传覆盖后的 cfg，绕开全局 policy 缓存）----
         final, changes = apply_rules_with_cfg(row, rule_loaded, clean_cfg)
         if final is None:
@@ -153,11 +160,19 @@ def run_preview(overrides: dict | None = None, n_sample: int = 10000,
         scores = _score_with_cfg(final, qual_weights, qual_cfg)
         verdict, _reason = quality_gate_with_cfg(scores, qual_cfg["gate"])
         qual_stats[verdict] = qual_stats.get(verdict, 0) + 1
+        if verdict == "pass":
+            pass_score_sum += scores["quality_score"]
+            for k, v in scores.items():
+                if k.startswith("quality_") and k != "quality_score":
+                    dim_sums[k] = dim_sums.get(k, 0.0) + v
 
     return {
         "n_sample": n_sample,
+        "n_read": n_read,
         "clean": clean_stats,
-        "quality": qual_stats,
+        "quality": {**qual_stats,
+                    "pass_score_sum": round(pass_score_sum, 4),
+                    "dim_sums": {k: round(v, 4) for k, v in sorted(dim_sums.items())}},
     }
 
 

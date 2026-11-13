@@ -113,9 +113,9 @@ CLI 退出码 0/1/2/3。完整契约与五个决策记录（D1-D5）见 `docs/wp
 
 | 状态 | 内容 |
 |---|---|
-| ✅ 已完成 | 四源采集（wiki 为真实源；oscar/news 为 mock 适配器）· clean · dedup · quality · mix · release · 四臂 ppl · 指标卡 · dashboard（六 Tab + 三档配方 + 报告导出）· 多模态插件层文本绑定 · CLIP 对齐内核与评测标定 · P11 梯度筛选 · LoRA 因果链终证（文本） |
+| ✅ 已完成 | 四源采集（wiki 为真实源；oscar/news 为 mock 适配器）· clean · dedup · quality · mix · release · 四臂 ppl · 指标卡 · dashboard（六 Tab + 三档配方 + 报告导出）· 多模态插件层文本绑定 · CLIP 对齐内核与评测标定 · P11 梯度筛选 · LoRA 因果链终证（文本）· 带约束旋钮自动搜索（`dashboard/autotune.py`） |
 | 🚧 建设中 | 中文真实图文语料与阈值重标定（`clip.enabled` 暂为 false）· 图文配对链路接入七层编排 · Kafka/Airflow 激活（代码与容器就绪，DAG 未挂载） |
-| ⬜ 未做 | 旋钮自动搜索 · 多模态场景的因果链终证 · 感知哈希/音频指纹 · 音视频插件实装 |
+| ⬜ 未做 | 多模态场景的因果链终证 · 感知哈希/音频指纹 · 音视频插件实装 |
 
 模块级契约与实验协议：`docs/blueprint.md` §2/§3/§4；工作包队列：`docs/backlog.md`。
 

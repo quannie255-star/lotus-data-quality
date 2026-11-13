@@ -19,6 +19,7 @@
 | 三档配方切换 | 「控制台」Tab | 干净优先 / 多样优先 / 去重优先（`configs/recipes.json`）；先看逐旋钮 diff + 抽样预览代价，再一键应用并后台全链重算。配方数值已定稿（2026-11-13，每档理由见 recipes.json 的 rationale 字段） |
 | 导出评估报告 | 「治理对比」Tab | 一键生成自包含 HTML：六项指标卡 + 四臂困惑度消融 + 三档配方代价（抽样口径显式标注）+ 去留账本摘要；缺失块显示占位与产出命令，不编数 |
 | 旋钮控制台 | 「控制台」Tab | 单旋钮微调 → 预览（1 万行抽样，秒级）→ 保存写回（`knobs.py` 原子精准替换，防格式漂移污染指纹） |
+| 带约束旋钮搜索 | 命令行 `autotune.py` | 硬约束「最终保留率 ≥ min_keep」，目标「放行行平均质量最高」；基线 + 网格抽样共 24 次评估，结果落 `data/metrics/autotune.json`；建议值不自动写回 |
 | 后台全链重算 | 「控制台」Tab | `pipeline_runner.py` subprocess 跑 clean→…→metrics，进度落 `data/meta/pipeline_progress.json` |
 
 ## 文件
@@ -29,13 +30,34 @@
 | `knobs.py` | 旋钮读写（KNOB_BOUNDS 范围校验 + 字节级精准替换） |
 | `recipes.py` | 三档配方加载/校验/diff/应用（校验失败不写任何文件） |
 | `preview.py` | 抽样预览引擎（只读不落盘，绕开 lru_cache 的纯函数通道） |
+| `autotune.py` | 带约束的旋钮自动搜索（只读预览，输出建议值与完整候选历史） |
 | `report.py` | 评估报告 HTML 渲染（纯函数，数字全部注入，可离线单测） |
 | `pipeline_runner.py` | 后台全链重算（启动/进度/状态） |
+
+## 旋钮自动搜索（命令行）
+
+```bash
+.venv/Scripts/python.exe -m dashboard.autotune \
+    --sample 10000 --evals 24 --min-keep 0.5 --out data/metrics/autotune.json
+```
+
+问题定义写死在结果 JSON 的 `config.objective` 里：**硬约束**为最终保留率
+（clean 放行且 quality 放行 / 读入行数）≥ `min_keep`，**目标**为放行行平均
+`quality_score` 最大（同分取保留率高者）。候选 #0 恒为当前配置，其余从
+`DEFAULT_GRID` 按 seed 无放回抽样，因此任何一次结果都能与基线逐项对照。
+
+2026-11-13 本机 1 万行样本的实测：基线保留 81.7%、放行均分 0.9434；最优候选
+保留 70.9%、放行均分 0.9555（+1.2pp），主要来自 `quality.min_dim_score`
+0.3→0.5。24 个候选的均分集中在 0.936–0.955，说明该网格上「继续收紧」的边际
+收益很小——这也是结果文件必须连保留率一起报的原因。
+
+搜索只产出建议值，**不写** `configs/*.json`；确认后用控制台或
+`knobs.write_knobs` 落盘，再由全链重算复核。
 
 ## 测试
 
 ```bash
-.venv/Scripts/python.exe -m pytest tests/test_dashboard_knobs.py tests/test_dashboard_recipes.py -q
+.venv/Scripts/python.exe -m pytest tests/test_dashboard_knobs.py tests/test_dashboard_recipes.py tests/test_autotune.py -q
 ```
 
 变异证据（门禁能红）见 `tests/test_dashboard_recipes.py`：未知旋钮键、越界值、
@@ -46,5 +68,8 @@ HTML 注入（XSS 转义）三组用例；`口径说明` 见 `downstream/grad_se
 
 - 配方预览与旋钮预览均为 **1 万行抽样口径**（跳过 dedup——MinHash 是 27–75 分钟的大头），
   只回答「代价方向与幅度」，不替代全量重算后的指标卡。
+- 自动搜索同样基于上述抽样：`dedup.verify_threshold` 不参与搜索（无签名算不出真实
+  去重率），`uniqueness` / `non_pollution` 在预览里恒为 1.0。因此 `mean_quality` 只用于
+  候选间横向比较，不能当作全量质量分对外报数。
 - 看板查询 fail-fast 让位于可用性（dev-lessons #004）：层产物缺失时显示占位而非报错。
 - Streamlit 1.49 起 `use_container_width` 已弃用；本仓看板与 demo 已全部迁移到 `width="stretch"`（2026-11），后续只用新写法。
