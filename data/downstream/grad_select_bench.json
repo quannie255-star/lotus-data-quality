@@ -1,0 +1,291 @@
+{
+  "configs": {
+    "N10000_d128": {
+      "serial_baseline": {
+        "repeats": 3,
+        "seconds_median": 0.241942
+      },
+      "torch_batch": {
+        "correctness": {
+          "k_identical": true,
+          "max_abs_score_diff": 6.975332428327263e-08,
+          "selected_identical": true
+        },
+        "repeats": 3,
+        "seconds_median": 0.04145,
+        "speedup_vs_serial": 5.84
+      },
+      "torch_batch_cuda": {
+        "correctness": {
+          "k_identical": true,
+          "max_abs_score_diff": 5.897211663441482e-08,
+          "selected_identical": true
+        },
+        "repeats": 3,
+        "seconds_median": 0.0418,
+        "speedup_vs_serial": 5.79
+      },
+      "torch_chunk": {
+        "correctness": {
+          "k_identical": true,
+          "max_abs_score_diff": 6.975332428327263e-08,
+          "selected_identical": true
+        },
+        "repeats": 3,
+        "seconds_median": 0.06539,
+        "speedup_vs_serial": 3.7
+      },
+      "torch_loop": {
+        "correctness": {
+          "k_identical": true,
+          "max_abs_score_diff": 7.227140935706089e-08,
+          "selected_identical": true
+        },
+        "repeats": 3,
+        "seconds_median": 0.500926,
+        "speedup_vs_serial": 0.48
+      }
+    },
+    "N10000_d32": {
+      "serial_baseline": {
+        "repeats": 3,
+        "seconds_median": 0.071566
+      },
+      "torch_batch": {
+        "correctness": {
+          "k_identical": true,
+          "max_abs_score_diff": 1.1058185567236478e-07,
+          "selected_identical": true
+        },
+        "repeats": 3,
+        "seconds_median": 0.019925,
+        "speedup_vs_serial": 3.59
+      },
+      "torch_batch_cuda": {
+        "correctness": {
+          "k_identical": true,
+          "max_abs_score_diff": 9.552896373943298e-08,
+          "selected_identical": true
+        },
+        "repeats": 3,
+        "seconds_median": 0.021228,
+        "speedup_vs_serial": 3.37
+      },
+      "torch_chunk": {
+        "correctness": {
+          "k_identical": true,
+          "max_abs_score_diff": 1.1058185567236478e-07,
+          "selected_identical": true
+        },
+        "repeats": 3,
+        "seconds_median": 0.020206,
+        "speedup_vs_serial": 3.54
+      },
+      "torch_loop": {
+        "correctness": {
+          "k_identical": true,
+          "max_abs_score_diff": 1.0039659253946454e-07,
+          "selected_identical": true
+        },
+        "repeats": 3,
+        "seconds_median": 0.480048,
+        "speedup_vs_serial": 0.15
+      }
+    },
+    "N1000_d32": {
+      "serial_baseline": {
+        "repeats": 3,
+        "seconds_median": 0.007705
+      },
+      "torch_batch": {
+        "correctness": {
+          "k_identical": true,
+          "max_abs_score_diff": 8.043556565251464e-08,
+          "selected_identical": true
+        },
+        "repeats": 3,
+        "seconds_median": 0.001302,
+        "speedup_vs_serial": 5.92
+      },
+      "torch_batch_cuda": {
+        "correctness": {
+          "k_identical": true,
+          "max_abs_score_diff": 1.0786226811720923e-07,
+          "selected_identical": true
+        },
+        "repeats": 3,
+        "seconds_median": 0.001389,
+        "speedup_vs_serial": 5.55
+      },
+      "torch_chunk": {
+        "correctness": {
+          "k_identical": true,
+          "max_abs_score_diff": 8.043556565251464e-08,
+          "selected_identical": true
+        },
+        "repeats": 3,
+        "seconds_median": 0.00113,
+        "speedup_vs_serial": 6.82
+      },
+      "torch_loop": {
+        "correctness": {
+          "k_identical": true,
+          "max_abs_score_diff": 8.043556565251464e-08,
+          "selected_identical": true
+        },
+        "repeats": 3,
+        "seconds_median": 0.048501,
+        "speedup_vs_serial": 0.16
+      }
+    },
+    "N50000_d128": {
+      "serial_baseline": {
+        "repeats": 1,
+        "seconds_median": 1.258504
+      },
+      "torch_batch": {
+        "correctness": {
+          "k_identical": true,
+          "max_abs_score_diff": 6.400872074041608e-08,
+          "selected_identical": true
+        },
+        "repeats": 3,
+        "seconds_median": 0.215088,
+        "speedup_vs_serial": 5.85
+      },
+      "torch_batch_cuda": {
+        "correctness": {
+          "k_identical": true,
+          "max_abs_score_diff": 8.406993268206264e-08,
+          "selected_identical": true
+        },
+        "repeats": 3,
+        "seconds_median": 0.194172,
+        "speedup_vs_serial": 6.48
+      },
+      "torch_chunk": {
+        "correctness": {
+          "k_identical": true,
+          "max_abs_score_diff": 6.400872074041608e-08,
+          "selected_identical": true
+        },
+        "repeats": 3,
+        "seconds_median": 0.23554,
+        "speedup_vs_serial": 5.34
+      },
+      "torch_loop": {
+        "correctness": {
+          "k_identical": true,
+          "max_abs_score_diff": 6.702903534994142e-08,
+          "selected_identical": true
+        },
+        "repeats": 3,
+        "seconds_median": 2.571571,
+        "speedup_vs_serial": 0.49
+      }
+    },
+    "N50000_d32": {
+      "serial_baseline": {
+        "repeats": 1,
+        "seconds_median": 0.350708
+      },
+      "torch_batch": {
+        "correctness": {
+          "k_identical": true,
+          "max_abs_score_diff": 1.4849373497494156e-07,
+          "selected_identical": true
+        },
+        "repeats": 3,
+        "seconds_median": 0.080805,
+        "speedup_vs_serial": 4.34
+      },
+      "torch_batch_cuda": {
+        "correctness": {
+          "k_identical": true,
+          "max_abs_score_diff": 1.5074406511939031e-07,
+          "selected_identical": true
+        },
+        "repeats": 3,
+        "seconds_median": 0.051708,
+        "speedup_vs_serial": 6.78
+      },
+      "torch_chunk": {
+        "correctness": {
+          "k_identical": true,
+          "max_abs_score_diff": 1.4849373497494156e-07,
+          "selected_identical": true
+        },
+        "repeats": 3,
+        "seconds_median": 0.057393,
+        "speedup_vs_serial": 6.11
+      },
+      "torch_loop": {
+        "correctness": {
+          "k_identical": true,
+          "max_abs_score_diff": 1.4849373497494156e-07,
+          "selected_identical": true
+        },
+        "repeats": 3,
+        "seconds_median": 2.479607,
+        "speedup_vs_serial": 0.14
+      }
+    }
+  },
+  "env": {
+    "chunk_rows": 4096,
+    "cuda_available": true,
+    "cuda_device": "NVIDIA GeForce RTX 4060 Laptop GPU",
+    "m_ref": 64,
+    "platform": "Windows-10-10.0.26200-SP0",
+    "python": "3.11.16",
+    "ratio": 0.05,
+    "repeats": 3,
+    "torch": "2.9.1+cu126",
+    "torch_threads": 24
+  },
+  "thread_sweep": {
+    "arms": {
+      "threads_1": {
+        "correctness": {
+          "k_identical": true,
+          "max_abs_score_diff": 6.400872074041608e-08,
+          "selected_identical": true
+        },
+        "repeats": 3,
+        "seconds_median": 0.168695,
+        "threads": 1
+      },
+      "threads_2": {
+        "correctness": {
+          "k_identical": true,
+          "max_abs_score_diff": 6.400872074041608e-08,
+          "selected_identical": true
+        },
+        "repeats": 3,
+        "seconds_median": 0.164033,
+        "threads": 2
+      },
+      "threads_4": {
+        "correctness": {
+          "k_identical": true,
+          "max_abs_score_diff": 6.400872074041608e-08,
+          "selected_identical": true
+        },
+        "repeats": 3,
+        "seconds_median": 0.172368,
+        "threads": 4
+      },
+      "threads_8": {
+        "correctness": {
+          "k_identical": true,
+          "max_abs_score_diff": 6.400872074041608e-08,
+          "selected_identical": true
+        },
+        "repeats": 3,
+        "seconds_median": 0.180122,
+        "threads": 8
+      }
+    },
+    "config": "N50000_d128"
+  }
+}

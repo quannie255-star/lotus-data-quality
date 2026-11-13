@@ -1,0 +1,104 @@
+{
+  "calibration": {
+    "n_pairs": 1500,
+    "neg_cos": {
+      "p1": 0.0883,
+      "p25": 0.1723,
+      "p5": 0.1172,
+      "p50": 0.2578,
+      "p75": 0.3036,
+      "p95": 0.3412,
+      "p99": 0.3684
+    },
+    "pos_cos": {
+      "p1": 0.2358,
+      "p25": 0.2995,
+      "p5": 0.2584,
+      "p50": 0.325,
+      "p75": 0.3418,
+      "p95": 0.373,
+      "p99": 0.3969
+    },
+    "suggest_cos_hi": 0.325,
+    "suggest_cos_lo": 0.3412,
+    "wall_seconds": 15.0,
+    "youden": {
+      "fpr": 0.452,
+      "j": 0.476,
+      "threshold": 0.268844,
+      "tpr": 0.928
+    }
+  },
+  "data": {
+    "caption_idx": 0,
+    "metadata_excluded_missing_files": [
+      "train/2258277193_586949ec62.jpg.1"
+    ],
+    "n_calib": 500,
+    "n_pool_images": 8091,
+    "n_test": 1500,
+    "note": "标定集与测试集不相交；阈值只在标定集上定，指标只在测试集上报",
+    "source": "Flickr8k (ModelScope llm416101531/Flickr8k, 真实照片+人工英文caption)",
+    "split_seed": 2026
+  },
+  "discrimination": {
+    "at_youden_threshold": {
+      "accuracy": 0.6447,
+      "confusion": {
+        "fn": 106,
+        "fp": 1493,
+        "tn": 1507,
+        "tp": 1394
+      },
+      "f1": 0.6355,
+      "precision": 0.4829,
+      "recall": 0.9293,
+      "threshold": 0.268844
+    },
+    "at_zero_threshold": {
+      "accuracy": 0.3336,
+      "confusion": {
+        "fn": 0,
+        "fp": 2999,
+        "tn": 1,
+        "tp": 1500
+      },
+      "f1": 0.5001,
+      "precision": 0.3334,
+      "recall": 1.0,
+      "threshold": 0.0
+    },
+    "auc_all_negatives": 0.7654,
+    "auc_easy_only": 0.993,
+    "auc_hard_only": 0.5377,
+    "n_pairs": {
+      "easy_neg": 1500,
+      "hard_neg": 1500,
+      "pos": 1500
+    }
+  },
+  "env": {
+    "backend": "clip",
+    "device": "cuda",
+    "platform": "Windows-10-10.0.26200-SP0",
+    "python": "3.11.16"
+  },
+  "model": {
+    "path": "C:\\Users\\10393\\Desktop\\现在的项目\\项目一\\data\\models\\clip-vit-base-patch32",
+    "tag": "clipb32"
+  },
+  "retrieval": {
+    "image2text_R@1": 0.5173,
+    "image2text_R@10": 0.878,
+    "image2text_R@5": 0.7793,
+    "image2text_median_rank": 1,
+    "n_queries": 1500,
+    "pool_note": "候选池=测试集图片与其第1条caption（单参考口径）",
+    "text2image_R@1": 0.4913,
+    "text2image_R@10": 0.858,
+    "text2image_R@5": 0.7667,
+    "text2image_median_rank": 2,
+    "wall_seconds": 10.3
+  },
+  "wall_seconds_total": 78.5
+}

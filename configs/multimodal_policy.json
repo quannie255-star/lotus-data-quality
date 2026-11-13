@@ -1,0 +1,38 @@
+{
+  "version": "0.1.0",
+  "status": "多模态策略（图文配对 image_text 演示档）：本文件只放模态层旋钮——联合门禁权重与配对规则。文本五维阈值仍归 quality_policy.json；簇代表源信任序仍归 dedup_policy.json（事实单一来源，不在此重复登记）。改参数=改产物，配置进指纹自动重算（同 WP-01 语义）。",
+  "joint_gate": {
+    "modality_weights": {"text": 0.6, "image": 0.4},
+    "modality_weights_cross_modal": {"text": 0.5, "image": 0.2, "cross_modal": 0.3},
+    "min_modality_score": 0.30,
+    "min_joint_score": 0.55,
+    "note": "短板木桶律：任一模态破 min_modality_score 或联合分破 min_joint_score → remove；hold 语义由 pair_rules 承担（孤儿对 hold，不静默删）。两套权重对应 clip.enabled 两态（和都=1，有 test_production_config_weights_sum_to_one 钉住）：关=text/image 双模态（v0 行为），开=text/image/cross_modal 三模态。三模态权重 0.5/0.2/0.3【已定稿 2026-11-13，owner 采纳建议值】——理由：文本仍是图文样本信息主体（0.5），跨模态对齐是本轮新增的关键判别力、给到次高权重（0.3），图像结构分只是字节级存在性检查、信息量最低（0.2）；这是先上线攒账本的起点值，待 hold/remove 账本积累后按真实放行/误杀分布再校准，不在无数据时精调。"
+  },
+  "image_text": {
+    "pair_rules": {
+      "orphan_policy": "hold",
+      "min_caption_chars": 5,
+      "min_image_bytes": 1024,
+      "note": "orphan_policy ∈ hold/drop：缺图或缺文的对的处置（hold=隔离待复核，默认）。caption 过短或图像字节过小 → drop"
+    },
+    "clip": {
+      "enabled": false,
+      "enabled_decision": "【已定稿 2026-11-13，owner 采纳建议值：暂置 false】理由：对齐分归一化区间 cos_lo/cos_hi 是在 CN-CLIP × Flickr8k 英文 caption（跨语言口径）上标定的，而 Lotus 生产语料是中文——用错误分布标定的阈值给中文图文对判门禁，正是实验报告 §5.3 记录的『模型-语言不匹配产生比没有门禁更危险的假读数』场景（CN-CLIP 英文硬负 AUC 0.4358，低于随机）。因此保持 false，待中文真实图文语料就位、重标定 cos_lo/cos_hi 后再切 true。切换只是改这一个布尔值 + 触发多模态阶段指纹重算，代码路径已全部就绪并被 tests/test_clip_integration.py 覆盖（含真实模型序关系门禁）。",
+      "model_path": "data/models/cn-clip-vit-base-patch16",
+      "backend_note": "config.json architectures 自适应：ChineseCLIPModel→中文CLIP（默认，Lotus 中文语料）；CLIPModel→OpenAI CLIP（英文 caption）",
+      "max_text_len": 52,
+      "cos_lo": 0.3289,
+      "cos_hi": 0.523,
+      "note": "对齐分 = clip((cos−cos_lo)/(cos_hi−cos_lo), 0, 1)。cos_lo/cos_hi 已由真实数据标定回填（clip_bench/apply_calibration.py --tag cnclip_full，2026-11-13）：锚定 align(约登阈值 0.3871)=0.30（min_modality_score 门禁线）、align(pos_p95 0.523)=1.0。注意标定语料是 Flickr8k 英文 caption（跨语言口径，中文真实语料源缺失）——中文语料上线后须重标定，这也是 enabled 暂置 false 的直接原因（见 enabled_decision）。enabled=true 时缺 torch/模型加载失败会 fail-fast 抛错，不静默降级"
+    },
+    "dims": {
+      "caption": {"note": "文本侧直连 quality/engine 五维打分（genre=default 带），不另立标准"},
+      "image_structural": {"note": "v0 结构性检查：图像引用存在 + 字节数过阈值；感知质量需 image 插件引入解码器（预留，见 dedup/api.PerceptualHashEngine 同族决策）"},
+      "cross_modal_alignment": {"note": "v1 已接入 CLIP（clip 开关）：开启后输出标定归一的 0~1 对齐分并作为 cross_modal 模态进联合门禁；关闭时读数 null 不假装（空读数纪律，同指标卡 semantic_diversity）"}
+    },
+    "dedup": {
+      "image_exact_dup_policy": "collapse_by_source_trust",
+      "note": "同图不同文 → 仍折叠（图重复即样本重复），簇代表按 dedup_policy.canonical_policy 选择；图+文全同 → pair_exact_dup。感知哈希近重为预留接口"
+    }
+  }
+}

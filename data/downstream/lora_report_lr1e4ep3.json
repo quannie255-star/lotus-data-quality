@@ -1,0 +1,129 @@
+{
+  "baseline_phi0": {
+    "n_texts": 536,
+    "n_tokens": 111943,
+    "ppl": 23.5105,
+    "token_nll": 3.157446
+  },
+  "conclusion": {
+    "grad_vs_baseline_pct": 2.526,
+    "grad_vs_random_pct": 1.406,
+    "random_vs_baseline_pct": 1.105,
+    "smoke": false,
+    "statement": "单次运行（seed=42）：梯度筛选臂 test ppl 24.1044 vs 随机臂 23.7702（+1.41%）。负值=筛选臂更好。单 seed 无显著性检验，结论口径=「本配置下筛选是否优于随机」，不外推。"
+  },
+  "config": {
+    "dtype": "float32",
+    "lora_alpha": 16,
+    "lora_dropout": 0.0,
+    "lora_r": 8,
+    "lr": 0.0001,
+    "max_len": 256,
+    "name": "C:\\Users\\10393\\Desktop\\现在的项目\\项目一\\data\\models\\Qwen3-0.6B",
+    "seed": 42,
+    "select_ratio": 0.05,
+    "sft_epochs": 3,
+    "smoke": false,
+    "tag": "lr1e4ep3",
+    "warmup_epochs": 1,
+    "warmup_frac": 0.01
+  },
+  "data": {
+    "excluded_overlap": 6,
+    "k_select": 120,
+    "m_ref": 64,
+    "n_candidates": 2396,
+    "n_test": 536,
+    "sources": {
+      "candidates": "data/release/v0.1/**/part-*.parquet (content)",
+      "reference+test": "data/clean/**/part-*.parquet, seed=2026, 前64行=参考/其余=测试"
+    }
+  },
+  "env": {
+    "device": "cuda",
+    "gpu": "NVIDIA GeForce RTX 4060 Laptop GPU",
+    "platform": "Windows-10-10.0.26200-SP0",
+    "python": "3.11.16",
+    "torch": "2.9.1+cu126"
+  },
+  "grad_arm": {
+    "final_loss": 1.929155945777893,
+    "n_texts": 536,
+    "n_tokens": 111943,
+    "n_train_docs": 120,
+    "ppl": 24.1044,
+    "steps": 360,
+    "token_nll": 3.182396,
+    "wall_seconds": 310.6
+  },
+  "random_arm": {
+    "final_loss": 2.9195361137390137,
+    "n_texts": 536,
+    "n_tokens": 111943,
+    "n_train_docs": 120,
+    "ppl": 23.7702,
+    "steps": 360,
+    "token_nll": 3.168432,
+    "wall_seconds": 309.8
+  },
+  "scoring": {
+    "n_zero_norm": 0,
+    "reused": true,
+    "score_max": 0.477951,
+    "score_median": 0.115816,
+    "score_min": -0.130299,
+    "wall_seconds": 2053.4
+  },
+  "selection": {
+    "grad_top_indices_head": [
+      9,
+      10,
+      34,
+      35,
+      36,
+      56,
+      73,
+      123,
+      138,
+      140,
+      164,
+      176,
+      183,
+      196,
+      202,
+      208,
+      214,
+      216,
+      228,
+      249
+    ],
+    "overlap_grad_random": 4,
+    "random_indices_head": [
+      10,
+      69,
+      78,
+      136,
+      155,
+      157,
+      169,
+      200,
+      205,
+      209,
+      212,
+      236,
+      250,
+      251,
+      260,
+      288,
+      315,
+      328,
+      342,
+      353
+    ]
+  },
+  "wall_seconds_total": 1254.8,
+  "warmup": {
+    "anchor": "C:\\Users\\10393\\Desktop\\现在的项目\\项目一\\data\\downstream\\lora_anchor_phi0",
+    "reused": true
+  }
+}

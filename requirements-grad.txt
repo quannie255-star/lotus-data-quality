@@ -1,0 +1,27 @@
+# 可选依赖组：downstream/grad_select 并行臂 + downstream/lora_finetune 因果链终证
+#            + clip_bench / modalities/image/clip_align（CLIP 对齐）
+# 基础治理链路与全部测试（torch 缺失时相关用例自动 skip）不需要本文件。
+#
+# 安装（本机网络口径，见 downstream/lora_finetune/开发日志.md 2026-11-12 条）：
+#   download.pytorch.org 不可达 → CUDA 轮子走 SJTU 镜像手动下载后本地安装：
+#     curl -L -o torch-2.9.1+cu126-cp311-cp311-win_amd64.whl \
+#       "https://mirror.sjtu.edu.cn/pytorch-wheels/cu126/torch-2.9.1%2Bcu126-cp311-cp311-win_amd64.whl"
+#     curl -L -o torchvision-0.24.1+cu126-cp311-cp311-win_amd64.whl \
+#       "https://mirror.sjtu.edu.cn/pytorch-wheels/cu126/torchvision-0.24.1%2Bcu126-cp311-cp311-win_amd64.whl"
+#     pip install ./torch-2.9.1+cu126-cp311-cp311-win_amd64.whl
+#     pip install ./torchvision-0.24.1+cu126-cp311-cp311-win_amd64.whl --no-deps
+#   torchvision 必装：transformers 5.x 图像预处理在缺它时报误导性的
+#   "'NoneType' object is not subscriptable"（映射表为 None），版本须与 torch 配套（2.9.1↔0.24.1）
+#   CPU-only 可直接：pip install torch torchvision（清华源）
+#   其余依赖：pip install -r requirements-grad.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
+#
+# 模型下载（hf-mirror 大文件重定向被墙 → 一律走 ModelScope 直链 curl）：
+#   Qwen3-0.6B：见 downstream/lora_finetune/开发日志.md（落 data/models/Qwen3-0.6B/）
+#   CN-CLIP：data/models/cn-clip-vit-base-patch16/（来源见 clip_bench/开发日志.md）
+#   OpenAI CLIP ViT-B/32：hf-mirror resolve 直链慢速可下（~90KB/s）
+
+transformers==5.22.2
+peft==0.21.2
+accelerate==1.15.0
+safetensors==0.8.0
+sympy==1.14.0

@@ -1,0 +1,37 @@
+{
+  "version": "0.2.0",
+  "status": "三档配方预设：干净优先 / 多样优先 / 去重优先。每档 = 一组旋钮值（与 dashboard 控制台同一批 KNOB_SPEC 旋钮），一键写回 configs/*_policy.json 后全链自动重算（配置进指纹）。",
+  "note": "【已定稿 2026-11-13，owner 采纳建议值】基准 = 当前生产值（min_cjk_chars=10, min_han_ratio=0.25, max_link_density=0.30, verify_threshold=0.8, min_total_score=0.55, min_dim_score=0.30）。定稿原则：①三档只在同一批旋钮上朝三个正交方向偏移，互不越界改到对方维度（干净档不动去重阈值、去重档不动清洗/门禁），保证「一档一变量」可归因；②幅度取『能看出代价、又不至于把某层清空』的中间档——方向对但幅度保守，宁可用控制台预览（1 万行抽样）验证后再逐档加码，不在配置里一步到位；③所有值都在 knobs.py 的 KNOB_BOUNDS 内（validate_recipe 会拦越界，门禁能红）。每档具体理由见 rationale 字段。",
+  "recipes": {
+    "clean_first": {
+      "label": "干净优先",
+      "tradeoff": "语料更小但更干净：字数/中文占比门槛收紧、链接密度上限压低、门禁双线抬高。代价=规模损失（预览里看删除率与放行率的变化幅度）。",
+      "rationale": "min_cjk_chars 10→50（滤掉目录/空壳短页，wiki 正文数百字起，50 是安全下限不误杀正文）；min_han_ratio 0.25→0.5（中文语料应过半为汉字，0.5 挡混排/机翻残留）；max_link_density 0.30→0.15（导航/模板页链接密度高，压到 0.15 更狠地去样板）；min_total_score 0.55→0.70 且 min_dim_score 0.30→0.45（门禁双线同抬，总分与短板都要更硬）。去重阈值维持 0.8 不动——干净档的职责是『提纯』不是『去重』，一变量原则。",
+      "knobs": {
+        "clean": {"min_cjk_chars": 50, "min_han_ratio": 0.5, "max_link_density": 0.15},
+        "dedup": {"verify_threshold": 0.8},
+        "quality": {"min_total_score": 0.7, "min_dim_score": 0.45}
+      }
+    },
+    "diverse_first": {
+      "label": "多样优先",
+      "tradeoff": "保规模保多样：清洗与门禁放松、近重复阈值抬高（少删近似文档）。代价=脏数据放行率上升、重复内容增多（六项指标里 exact_dup_rate / language_consistency 会先变差）。",
+      "rationale": "min_han_ratio 0.25→0.15（放行更多混排/含外文术语的文档，保多样性）；max_link_density 0.30→0.45（容忍结构更松的页面）；min_total_score 0.55→0.45 且 min_dim_score 0.30→0.25（门禁放到隔离带下沿，尽量多放行）；verify_threshold 0.8→0.9（近重复判定更严=只删几乎完全一样的，保留更多近似但不同的表达）。min_cjk_chars 维持 10 不动（过短过滤是底线，多样也不留空壳页）。",
+      "knobs": {
+        "clean": {"min_cjk_chars": 10, "min_han_ratio": 0.15, "max_link_density": 0.45},
+        "dedup": {"verify_threshold": 0.9},
+        "quality": {"min_total_score": 0.45, "min_dim_score": 0.25}
+      }
+    },
+    "dedup_first": {
+      "label": "去重优先",
+      "tradeoff": "只动去重：相似度阈值从 0.8 压到 0.6，激进合并近似簇。代价=可能误删「相似但不同」的文档（改写/转载但内容有差异），其余维度不变。",
+      "rationale": "verify_threshold 0.8→0.6 是本档唯一改动——Jaccard 0.6 即判为重复并折叠，激进压缩转载/改写/模板化重复。清洗三门槛与门禁双线全部维持生产基准值（min_cjk_chars=10/min_han_ratio=0.25/max_link_density=0.30/min_total_score=0.55/min_dim_score=0.30），严格一变量：本档只回答『更狠地去重值不值』，不掺杂提纯/放宽的效果。0.6 的风险（误删相似但不同）已在 tradeoff 标明，可对照 dedup 层账本核验。",
+      "knobs": {
+        "clean": {"min_cjk_chars": 10, "min_han_ratio": 0.25, "max_link_density": 0.3},
+        "dedup": {"verify_threshold": 0.6},
+        "quality": {"min_total_score": 0.55, "min_dim_score": 0.3}
+      }
+    }
+  }
+}
