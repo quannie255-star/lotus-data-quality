@@ -59,7 +59,7 @@
 - [x] 测试 15 个（runs 7 + changelog 8：缺 required / 非法 enum / quarantine 跨字段 / 坏行行号 / start-finish 对读回 / reason 归属 / 去重）
 - [ ] `commit` + 贴 `pytest -v` 绿灯输出（署名与 commit message 归 owner）
 
-### ③ T2 口试三题　🟨 答案已成稿 → `docs/oral-exam.md`，待随 commit 提交
+### ③ T2 机制问答三题　🟨 答案已成稿 → `docs/design-qa.md`，待随 commit 提交
 
 1. run 崩在 start 之后、finish 之前，日志永远停在 `running` —— **读端怎么判死活？** v2 方案一句话。
 2. fail-fast 对**审计链**是对的、对**看板**为什么可能错？两种场景的本质区别。
@@ -73,7 +73,7 @@
 - [x] 拍板：完整 64 位（`hash.truncate = null`）
 - [x] 验收测试 5 条 + 边界：幂等 / 全半角 / 大小写空白 / 简繁 / 不同内容 / 标点 / 换行保留 / 哈希形态
 
-### ⑤ 补交口试 V1–V4　🟨 答案已成稿 → `docs/oral-exam.md`，待随 T1 一起提交
+### ⑤ 补交机制问答 V1–V4　🟨 答案已成稿 → `docs/design-qa.md`，待随 T1 一起提交
 
 1. NFKC 已折叠全角标点，`punctuation` 规则**是不是白写**？若不是，它真正还要处理哪类字符。
 2. 规则升级导致哈希变化，**怎么做到不重写全库、其他阶段零改动**？说清：哪个字段变、哪张表重算、哪些表不动。
