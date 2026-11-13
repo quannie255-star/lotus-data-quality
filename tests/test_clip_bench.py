@@ -4,6 +4,7 @@
 metadata 的前若干条（不碰图片文件——硬负挖掘用替身 embedding）。
 """
 
+import importlib.util
 from pathlib import Path
 
 import pytest
@@ -14,6 +15,8 @@ from clip_bench.evaluate import auc_score, binary_metrics, retrieval_metrics, yo
 FLICKR_META = Path(__file__).resolve().parent.parent / "data" / "clip" / "flickr8k" / "metadata.jsonl"
 requires_flickr = pytest.mark.skipif(
     not FLICKR_META.exists(), reason="Flickr8k metadata 缺失（数据集不进仓库，下载见 clip_bench/README.md）")
+requires_torch = pytest.mark.skipif(
+    importlib.util.find_spec("torch") is None, reason="torch 未安装（可选依赖 requirements-grad.txt）")
 
 
 # ---- 指标实现（手算对照）----
@@ -48,6 +51,7 @@ def test_youden_on_separable_scores():
     assert 0.2 <= y["threshold"] <= 0.9
 
 
+@requires_torch
 def test_retrieval_diagonal_perfect():
     """单位阵相似度（查询 i 与候选 i 最相似）→ R@1=1。"""
     import torch
@@ -57,6 +61,7 @@ def test_retrieval_diagonal_perfect():
     assert m["image2text_median_rank"] == 1
 
 
+@requires_torch
 def test_retrieval_second_best():
     """构造正确项排第 2（干扰项相似度 1.0 > 正确项 0.5）→ R@1=0，R@5=1。"""
     import torch
