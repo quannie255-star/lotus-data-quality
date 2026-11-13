@@ -1,29 +1,39 @@
 # Lotus（濯莲）架构说明（ARCHITECTURE）
 
-> 本文是 **as-built** 文档：只描述当前已存在的代码与行为。规划中的模块（M2+）只出现在
-> §6 路线图并指向 `docs/blueprint.md`。完整设计决策在 `docs/wp-01-stage-protocol.md`（契约）
-> 与 `DEVELOPMENT_LOG.md`（决策日志，编号 M{n}-D{k} 被代码注释引用）。
+> 本文是 **as-built** 文档：只描述当前已存在的代码与行为；规划与未做项集中在 §6。
+> 完整设计决策在 `docs/wp-01-stage-protocol.md`（契约）与 `DEVELOPMENT_LOG.md`
+> （决策日志，编号 M{n}-D{k} 被代码注释引用）。
 
 ## 1. 数据流（当前实态）
 
 ```
-wikimedia/wikipedia (HF, 20231101.zh)
-        │  hf_hub_download（下载级幂等：缓存/断点/校验）
+四源（适配器统一映射为 spine 行）
+  wiki  : HF 20231101.zh，230,792 篇真实维基
+  oscar : mock jsonl（真实源接入后替换适配器）
+  news  : 本地 jsonl（同上）
+  pdf   : URL/本地 PDF → PyMuPDF 文本层 + 原件字节归档
+        │  run_stage（配置进指纹 + 逐文件验货 + run 审计）
         ▼
-ingest/wiki.py  iter_docs ──► spine 行流（doc_id/content_hash/registry 字段）
-        │  run_stage("ingest", ...)（处理级幂等：指纹+验货+审计）
+data/raw/{source}/ingest/part-*.parquet
+        │  latest_outputs 上游验货
         ▼
-data/raw/wiki/ingest/part-00000.parquet ──mc cp──► MinIO s3a://raw/docs/source=wiki/
+clean    六规则清洗 + PII 真脱敏          → data/clean/source={s}/
+dedup    精确 + MinHash 近重 + 并查集聚簇 → data/dedup/source={s}/ + signatures + report
+quality  五维打分 + 门禁三分              → data/quality/source={s}/ + gate_report
+mix      体裁/源分层 + token 预算抽样     → data/mix/candidates/
+release  license 执法 + semver + 溯源卡   → data/release/v0.1/
         │
-        ▼
-Spark 外部表 raw_docs（USING parquet, PARTITIONED BY source, 文件系统分区发现）
-        ▼
-SELECT source, COUNT(*) FROM raw_docs GROUP BY source;   ← W1 验收（wiki=230792 ✅）
+        ├──► metrics     治理前后指标卡（v0-raw vs v1-release）
+        └──► downstream  四臂 ppl（raw/clean/dedup/release）+ 梯度筛选 + LoRA 终证
+
+查询面（可选）：本地 parquet ──mc cp──► MinIO s3a://raw/docs/
+                ──► Spark 外部表 raw_docs（PARTITIONED BY source，文件系统分区发现）
 
 横切（被所有阶段消费）：
-  data/meta/runs.jsonl        run 生命周期事件（start/finish, status, note）
+  data/meta/runs.jsonl        run 生命周期事件（start/finish，失败也留痕）
+  data/meta/changelog.jsonl   每条数据的去留账（原因/引用/相似度）
   data/meta/first_seen/*.json doc_id → 首见时间台账（pending→commit）
-  data/meta/changelog.jsonl   变更日志（M4 起有数据；schema 已就位）
+  各阶段 manifest.json        输入指纹 + 产物哈希（缓存命中的验货依据）
 ```
 
 ## 2. 容器栈（docker-compose，7 服务）
@@ -69,6 +79,13 @@ SELECT source, COUNT(*) FROM raw_docs GROUP BY source;   ← W1 验收（wiki=23
 | `dashboard/app.py` | data/ 本地镜像 | Streamlit 四视图 | `funnel` `removal_attribution` `quality_distribution` `runs_audit` |
 | `clean/pii.py` | 文本 | 命中/脱敏 | `detect` `redact`（GB11643 + Luhn 校验） |
 | `sql/raw_docs.sql` | — | 外部表 DDL + 验收查询 | — |
+| `modalities/base.py` | 模态插件注册 | 插件绑定 | `Sample` `Cleaner` `Deduper` `QualityScorer` `register` `get` |
+| `modalities/text/` | 绑定既有文本实现（clean/dedup/quality） | 插件适配器 | `TextCleaner` `TextDedupEngine` `TextQualityScorer` |
+| `modalities/image/` | 🚧 v1 规则版 + CLIP 对齐 | 图文配对样本（v0 规则版：配对清洗/联合门禁/字节级精确去重）+ `clip_align.py` 对齐打分与 `cross_modal` 第三模态门禁 | `ImageTextSample` `PairedCleaner` `PairedDeduper` `PairedQualityScorer` |
+| `modalities/audio/`、`modalities/video/` | 预留位（未实装） | — | — |
+| `quality/multimodal.py` | 各模态分数 dict | 联合加权分 + 联合门禁 | `joint_score` `joint_gate` |
+| `dedup/api.py` | 样本流 | 去重引擎抽象 + 注册表 | `DedupEngine` `register_engine` `dedup_samples`（感知哈希/音频指纹为预留接口） |
+| `metrics/multimodal.py` | 配对样本行 | 多模态指标（配对完整性/跨模态重复率） | `pair_metrics` `compute_multimodal_card` |
 | `smoke/m1.py` | — | 五步 PASS/FAIL | — |
 
 ## 4. 阶段间契约（当前实态 + WP-01 目标态）
@@ -92,8 +109,68 @@ CLI 退出码 0/1/2/3。完整契约与五个决策记录（D1-D5）见 `docs/wp
 | M1-D6 日志双通道 | stderr 日志 / stdout 结构化 | — |
 | wp-01 D1-D5 | content 替换语义/配置指纹/changelog 两段式/分区策略/薄驱动 | 各附测试，见 wp-01 §4 |
 
-## 6. 路线图位（不展开，指向蓝图）
+## 6. 路线图位
 
-M2 OSCAR（阻塞中：FlClash + N1 实测）→ M3 news/pdf → M4 clean（WP-01 实装）→
-M5 dedup → M6 quality → M7 mix/release → M8 downstream ppl → M9 stream/DAG → M10 dashboard。
-模块级契约与实验协议：`docs/blueprint.md` §2/§3/§4；工作包队列：wp-01 文尾。
+| 状态 | 内容 |
+|---|---|
+| ✅ 已完成 | 四源采集（wiki 为真实源；oscar/news 为 mock 适配器）· clean · dedup · quality · mix · release · 四臂 ppl · 指标卡 · dashboard（六 Tab + 三档配方 + 报告导出）· 多模态插件层文本绑定 · CLIP 对齐内核与评测标定 · P11 梯度筛选 · LoRA 因果链终证（文本） |
+| 🚧 建设中 | 中文真实图文语料与阈值重标定（`clip.enabled` 暂为 false）· 图文配对链路接入七层编排 · Kafka/Airflow 激活（代码与容器就绪，DAG 未挂载） |
+| ⬜ 未做 | 旋钮自动搜索 · 多模态场景的因果链终证 · 感知哈希/音频指纹 · 音视频插件实装 |
+
+模块级契约与实验协议：`docs/blueprint.md` §2/§3/§4；工作包队列：`docs/backlog.md`。
+
+---
+
+## 7. 多模态分层架构（M11 起：核心层模态无关 + 插件层模态相关）
+
+> 定位：把「治理底座」与「模态实现」解耦。底座只认插件接口，不 import 任何具体模态；
+> 新增模态 = 新增 `modalities/<m>/` 插件包并注册，核心层零改动——这是宪法第 2 条
+> 「阶段间只通过表耦合，不通过代码调用耦合」在模态维度的推广。
+> 状态：**文本已绑定、图文 v1 已落地**；音视频为预留位，多模态链路尚未接入七层阶段编排。
+
+### 7.1 分层边界
+
+| 层 | 内容 | 边界纪律 |
+|---|---|---|
+| **核心层（模态无关）** | `common/`（ids/runs/changelog/idempotent/stage/first_seen 审计与幂等账本）· `quality/` 门禁调度 · `release/` 版本发布 · `metrics/` 指标卡框架 · `mix/` 配比 · `dags/`+`stream/` 编排 | 禁止 import `modalities/` 下任何具体模态插件；不引入模态专属依赖（解码器/深度学习框架一律在插件层） |
+| **插件层（模态相关）** | `modalities/text|image|audio|video/` 各自的采集器、清洗器、去重器、质量打分器 | 依赖核心层接口；模态专属依赖按需引入并在插件 README 声明 |
+
+### 7.2 插件接口规范（`modalities/base.py`，as-built）
+
+- `Sample`：统一样本基类（dataclass）。spine 身份字段（`doc_id/source/source_id/url/...`）
+  与模态无关，`modality`、`modality_pair_id` 为**追加字段**（不进 doc_id 键材料——宪法第 3 条）；
+  模态载荷由子类扩展：`TextSample.content`、`ImageTextSample.caption + image_uri + image_bytes_hash`。
+- 四个抽象基类：`Collector`（源 → 样本流）、`Cleaner`（样本流 → 判定 keep/drop/hold/transform，
+  判定协议与 `clean/base.py` 同构）、`Deduper`（样本流 → keep/removed/clusters，removed 必带
+  reason/ref/similarity——账本口径不变）、`QualityScorer`（样本 → 维度分 + 总分，0~1）。
+- 注册表：`modalities.register(modality, ...)` / `modalities.get(modality)`；插件包 import 即注册，
+  未注册模态 fail-fast（坏数据不静默的插件版）。
+- 多模态联合门禁：`quality/multimodal.py` 按配置加权各模态分数（权重旋钮在
+  `configs/multimodal_policy.json`），任一模态破下限 → 联合 remove；文本五维权重仍归
+  `configs/quality_policy.json`——各模态各管各的维度，联合层只管权衡。
+- 跨模态去重接口：`dedup/api.py` 定义 `DedupEngine` 抽象 + 注册表；文本 exact/MinHash 近重为
+  默认实现（适配既有 `dedup/engine.py`），图像字节级精确哈希已实装（纯 stdlib），
+  感知哈希/音频指纹为**预留接口**（未实装，调用即显式报错，不假装）。
+
+### 7.3 现状一览（叙事诚实）
+
+| 插件 | 状态 | 内容 |
+|---|---|---|
+| `modalities/text/` | ✅ 已绑定 | 适配器绑定既有文本实现（`clean/rules+pii`、`dedup/engine`、`quality/engine`）；文本链路 100% 走原路径，行为零变化 |
+| `modalities/image/` | 🚧 v1 规则版 + CLIP 对齐 | 图文配对样本（`ImageTextSample`）：配对完整性清洗（孤儿 hold 不静默删）、联合门禁、字节级精确去重（按源信任序选簇代表）。**v1 增量**：`clip_align.py` CLIP 图文对齐打分（CN-CLIP/OpenAI CLIP 双后端自适应，torch 仅在本层），`clip.enabled` 开启后 `per_modality` 增 cross_modal 第三模态键进联合门禁（权重 `modality_weights_cross_modal`），图文不匹配 → remove(low_quality_modality:cross_modal)、坏图 → remove(no_score)；关闭时对齐分 = null（空读数不假装，v0 行为不变）。评测与阈值标定在 `clip_bench/`（DL 大作业本体，标定产物回填 clip.cos_lo/cos_hi）。感知哈希仍为预留接口 |
+| `modalities/audio/`、`modalities/video/` | ⬜ 预留 | 目录与接口位就绪，未实装 |
+
+schema 边界：多模态字段定义在 `schema/multimodal_schema.json`（含 `modality` 枚举、
+`modality_pair_id`、图文载荷字段）；`unified_schema.json` 保持 0.3.2 不动——golden record
+与已发布数据行钉死该版本，spine 升级（追加 `modality` 列）留待首个多模态真实源落地时执行，
+避免无谓的连锁重算（决策记录：DEVLOG M11-D2）。
+
+### 7.4 新增模态的标准步骤
+
+1. `schema/multimodal_schema.json` 追加该模态的样本定义（载荷字段 + 校验规则）；
+2. 新建 `modalities/<m>/` 插件包：`Sample` 子类 + 四个基类实现 + `register(...)`；
+3. `configs/multimodal_policy.json` 追加该模态旋钮节（阈值/权重全部进配置，零字面量）；
+4. `tests/test_modalities.py` 追加接口冒烟测试与链路集成测试；
+5. 七层链路编排（clean/dedup/quality/mix/release 的 run 壳）不动——模态差异全部收在插件层，
+   阶段产物仍走 `data/{zone}/{stage}/source={s}/` 表路径语法与审计账本（WP-01 §1 不变，
+   `modality` 是列不是分区，无宪法豁免）。

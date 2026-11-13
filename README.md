@@ -1,6 +1,6 @@
 # 濯莲 Lotus
 
-![tests](https://img.shields.io/badge/tests-214%20passed-brightgreen)
+![ci](https://github.com/quannie255-star/lotus-data-quality/actions/workflows/ci.yml/badge.svg)
 ![python](https://img.shields.io/badge/python-3.11%2B-blue)
 ![license](https://img.shields.io/badge/license-MIT-green)
 
@@ -53,6 +53,20 @@
 
 > 以上为**文本链路**实测。核心治理底座（审计账本、幂等缓存、质量门禁调度、版本发布、运行时编排）是**模态无关**的，多模态能力通过插件层扩展——见 `ARCHITECTURE.md` §7 与 `modalities/`。
 
+### 看板实录（本机真实语料运行截图）
+
+**控制台** —— 旋钮与三档配方；改标准前先看代价（抽样预览）
+
+![控制台](docs/images/dashboard-console.png)
+
+**治理对比** —— 六项指标卡 + 治理前后条形图，一键导出评估报告 HTML
+
+![治理对比](docs/images/dashboard-comparison.png)
+
+**处理漏斗** —— 231,314 → 2,402 的逐层行数
+
+![处理漏斗](docs/images/dashboard-funnel.png)
+
 ### 路线图（控制台的四块仪表）
 
 ```
@@ -72,23 +86,28 @@
 
 ## 快速上手
 
-前置：Windows + Docker Desktop + Python 3.11+。
+前置：Windows + Docker Desktop + Python 3.11+（Windows 11 已实测；Linux/macOS 理论可用，未在本仓库验证）。
 
 ```bash
-git clone https://github.com/quannie255-star/-Lotus.git && cd -Lotus
+git clone https://github.com/quannie255-star/lotus-data-quality.git && cd lotus-data-quality
 pip install -r requirements.txt
 pip install -r requirements-grad.txt   # 可选：P11 并行臂 + LoRA 因果链终证（torch 镜像装法见该文件头注）
 
-setx HF_ENDPOINT "https://hf-mirror.com"     # 新开终端生效；huggingface-cli login
+setx HF_ENDPOINT "https://hf-mirror.com"     # Windows；新开终端生效，之后 huggingface-cli login
 
 cp .env.example .env                          # 改两个 replace_me
-bash docker/metastore/README.md 中的三条 curl # metastore 外挂 jar（一次性）
+
+# metastore 三件外挂 jar（一次性；下载地址与版本对齐说明见 docker/metastore/README.md）
+(cd docker/metastore && \
+  curl -fLO https://repo1.maven.org/maven2/org/postgresql/postgresql/42.7.4/postgresql-42.7.4.jar && \
+  curl -fLO https://repo1.maven.org/maven2/org/apache/hadoop/hadoop-aws/3.3.6/hadoop-aws-3.3.6.jar && \
+  curl -fLO https://repo1.maven.org/maven2/com/amazonaws/aws-java-sdk-bundle/1.12.367/aws-java-sdk-bundle-1.12.367.jar)
 
 docker compose up -d --build                  # 七容器栈（镜像源方案见 dev-lessons #004）
 python -m ingest.wiki 1                       # 首个源：23 万篇真实维基文档
 python smoke/m1.py                            # 一行冒烟：PASS/FAIL
 
-streamlit run dashboard/app.py                # 看板：指标卡/三档配方/评估报告导出
+python -m streamlit run dashboard/app.py      # 看板：指标卡/三档配方/评估报告导出
 python -m downstream.grad_select.benchmark    # P11 梯度筛选：串行 vs 并行基准 → JSON
 python -m downstream.lora_finetune.run        # 因果链终证：Qwen3-0.6B LoRA 双臂对照（GPU；加 --full-arm 补全量第三臂）
 ```

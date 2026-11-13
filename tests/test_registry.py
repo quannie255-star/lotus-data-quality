@@ -10,7 +10,6 @@ REQUIRED_PACKAGES = {
     "pytest",
     "jsonschema",
     "zhconv",
-    "datasets",
     "huggingface_hub",
     "pyarrow",
 }

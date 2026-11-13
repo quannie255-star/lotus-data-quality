@@ -2,7 +2,7 @@
 
 > 更新：2026-10-29 ｜ 来源：本轮 review 汇总（按依赖顺序重排）
 > 图例：⬜ 未开始 · 🟨 进行中 · ✅ 关账 · 🔶 部分完成
-> 原则：**①→④ + 口试是本周硬门禁，⑥ 并行清掉，③⑤ 不再欠新账。交一批评一次，节奏不变。**
+> 原则：**①→④ + 机制问答是本周硬门禁，⑥ 并行清掉，③⑤ 不再欠新账。交一批评一次，节奏不变。**
 
 ---
 
@@ -12,13 +12,13 @@
 
 | 链 | 路径 | 产出物 | 阻塞关系 |
 |----|------|--------|----------|
-| **A** | ① → ④ → ⑤ | `configs/text_normalization.json` 定稿 + `common/ids.py` + 5 条验收测试 + 口试 V1–V4 | ① 阻塞 ④ |
-| **B** | ② → ③ | `common/{runs,changelog}.py`（或 `audit.py`）+ 5 类测试 + `pytest -v` 绿灯 + 口试三题 + commit | ② 阻塞 commit 与 ③ |
+| **A** | ① → ④ → ⑤ | `configs/text_normalization.json` 定稿 + `common/ids.py` + 5 条验收测试 + 机制问答 V1–V4 | ① 阻塞 ④ |
+| **B** | ② → ③ | `common/{runs,changelog}.py`（或 `audit.py`）+ 5 类测试 + `pytest -v` 绿灯 + 机制问答三题 + commit | ② 阻塞 commit 与 ③ |
 | **C** | ⑥ | HF token + 小公开集拉取验证输出 | 与 A/B 并行 |
 
 ```text
-①text_norm ──> ④ids.py ──> ⑤口试V1-V4 ─┐
-②T2落盘+测试 ──> ③口试三题 ──> commit ──┼──> 本批次关账 ──> T3 / T4 / compose 课
+①text_norm ──> ④ids.py ──> ⑤机制问答V1-V4 ─┐
+②T2落盘+测试 ──> ③机制问答三题 ──> commit ──┼──> 本批次关账 ──> T3 / T4 / compose 课
 ⑥HF链路（并行，卡超 1 天启动 plan B）──┘
 ```
 
@@ -46,7 +46,7 @@
 > - [x] 补 `whitespace.collapse_scope = horizontal`：保守保留换行结构；若日后改 `all` 必须升 version
 > - 复核项：`updated_at` 已改为 2026-10-28（原 2025-06-01 早于仓库首次提交）
 
-### ② T2 收尾（落盘 + 测试 + commit）　🟨 代码与测试已完成，待 commit + 口试
+### ② T2 收尾（落盘 + 测试 + commit）　🟨 代码与测试已完成，待 commit + 机制问答
 
 - [x] 落盘 `common/runs.py` + `common/changelog.py`（没拆 `audit.py`：runs 记运行生命周期、changelog 记数据变更，两个关注点不该合）
 - [x] 6 条 review 意见全部修掉：
@@ -113,7 +113,7 @@
 - [x] compose review 三必修：S3A jar 走 Dockerfile 预置、spark 凭据改环境变量、metastore 两处未知数列入 boot 检查单
 - [x] **boot 测试**：本机 Docker daemon 未运行时留的检查单已执行，五项全部回填（`docs/dev-lessons.md` boot 检查单）
 - [x] **T5 `ingest/wiki.py`**（2026-10-29）：`iter_docs` 流式映射 + `hf_hub_download` 下载级幂等 + `run_stage` 处理级幂等；分片 0 = 230,792 行 / 345M 字符；`pytest` 68 绿；W1 终极验收 `SELECT source, COUNT(*) FROM raw_docs GROUP BY source` → `wiki 230792`。交付说明：`docs/ingest-wiki.md`
-- [x] **四道口试补答**（#004 两题 + #005 两题）：口头交卷（owner 要求答案不进仓库）
+- [x] **四道机制问答补答**（#004 两题 + #005 两题）：口头交卷（owner 要求答案不进仓库）
 - [ ] **T6**：OSCAR + 新闻适配器（`ingest/oscar.py`、`ingest/news.py`）——等 T5 跑通后再出任务书；`common/textstats.py` 的计数口径直接复用
 
 ---
@@ -125,11 +125,11 @@
 - ✅ ① text_normalization 定稿（v1.0.0 + 元 schema + 折叠范围实测）
 - ✅ HF 镜像环境变量
 - ✅ D4/E4 理解题
-- ✅ ② T2 代码与测试（13 测试）+ ③ 口试三题成稿
-- ✅ ④ T1 ids.py（10 测试）+ ⑤ 口试 V1–V4 成稿
+- ✅ ② T2 代码与测试（13 测试）+ ③ 机制问答三题成稿
+- ✅ ④ T1 ids.py（10 测试）+ ⑤ 机制问答 V1–V4 成稿
 - ✅ T3 pii.py（8 测试）、T4 idempotent.py（8 测试）、⑦ 依赖与 key registry
 - ✅ T5 wiki 适配器 + W1 终极验收（68 测试绿、230,792 行入 raw 层、外部表 `raw_docs` 可查）
-- 验收结论：口试 7/7 通过、47 测试全绿、本批次批准关账（含必修 1/2）
+- 验收结论：机制问答 7/7 通过、47 测试全绿、本批次批准关账（含必修 1/2）
 
 ---
 
@@ -161,7 +161,7 @@
 | 第 1 个半天 | ① 六条 owner_todo 全部写成"决定 + 理由"，升 version | config 里不再有 `owner_todo: true` |
 | 第 2–3 个半天 | ② 落盘 + 改掉 6 条 review 意见 + 5 类测试 | 本地 `pytest -v` 全绿 |
 | 第 3–4 个半天 | ④ `ids.py` 读 config + 5 条验收测试 | T1 测试全绿 |
-| 第 4 个半天 | ③ + ⑤ 七个口试题写答案（各 ≤3 句） | 每题都有结论 + 依据 |
+| 第 4 个半天 | ③ + ⑤ 七个机制问答题写答案（各 ≤3 句） | 每题都有结论 + 依据 |
 | 穿插 | ⑥ 全程挂着，卡一天即切 plan B；⑦ 十分钟清掉 | `huggingface-cli` 验证输出已贴 |
 
-**交付纪律**：一次提交只覆盖一条链（B 链的 commit 不含 T1 代码），commit message 带 `W1/W2` 标签；口试题答案贴在 commit 正文或 `docs/` 下，不留在聊天记录里。
+**交付纪律**：一次提交只覆盖一条链（B 链的 commit 不含 T1 代码），commit message 带 `W1/W2` 标签；机制问答题答案贴在 commit 正文或 `docs/` 下，不留在聊天记录里。
