@@ -27,6 +27,9 @@
 | news 输入文件 | `ingest/news.py` 的 `DATA_FILE` | data/mock/news/news.jsonl（30 行 mock） | news 数据形态 | N2 换真实语料时改 download 部分 |
 | wiki 的 license/genre 等声明 | `configs/source_registry.json` 的 `sources.wiki` | CC BY-SA 4.0 / wiki | 新 ingest 的行；旧行不追溯 | force 重跑 ingest（golden record 测试会同步要求更新） |
 | 单条记录的 schema 字段 | `schema/unified_schema.json`（spine/stage_extensions）+ `ingest/wiki.py` 的 `PARQUET_SCHEMA` + golden 测试 `tests/test_ingest_wiki.py` | v0.3.2 | 全管道契约 | schema_version 递增 + 全链路重算 |
+| **多模态联合门禁权重/配对规则** | `configs/multimodal_policy.json`（joint_gate 与 image_text 两节） | text .6 / image .4（clip 关）；三模态 .5/.2/.3（clip 开）；孤儿 hold；caption≥5 字；图≥1024B | 图文配对样本的门禁与清洗；文本五维不受影响 | 重跑对应模态阶段即自动重算（配置进指纹） |
+| **CLIP 跨模态对齐门禁** | `configs/multimodal_policy.json` 的 `image_text.clip` 节 | enabled=false；cos_lo=0.0/cos_hi=0.4（占位，标定后回填）；模型 data/models/cn-clip-vit-base-patch16 | 开启后图文不匹配 → remove(low_quality_modality:cross_modal)；标定与评测见 `clip_bench/` | 切换 enabled = 配置变更 → 多模态阶段自动重算 |
+| 多模态样本 schema | `schema/multimodal_schema.json`（sample_base + 各模态扩展；unified_schema 不动） | v0.1.0 | 插件层样本契约 | 追加字段只增不改；升 spine 前先过 golden |
 | 容器栈（服务/端口/凭据） | `docker-compose.yml`；凭据 `.env`（不进 git） | 7 服务 | 基础设施层 | `docker compose up -d` 重建受影响服务 |
 | Metastore 的 S3A/DB 连接 | `docker-compose.yml` metastore 服务的 `SERVICE_OPTS` | 见文件内注释 | metastore | `docker compose up -d metastore --force-recreate` |
 
@@ -74,3 +77,55 @@ PY
 
 **看跑了哪些 run**：`data/meta/runs.jsonl` 直接读，或
 `python -c "from common import runs; [print(e) for e in runs.read_events()]"`
+
+## 多模态插件配置指南（M11 起）
+
+多模态治理的旋钮全部在 **`configs/multimodal_policy.json`**，分两节：
+
+| 旋钮 | 位置 | 当前值 | 语义 |
+|---|---|---|---|
+| `joint_gate.modality_weights` | text 0.6 / image 0.4 | clip 关闭时的双模态权重（和必须=1，改错自动 fail-fast） |
+| `joint_gate.modality_weights_cross_modal` | text 0.5 / image 0.2 / cross_modal 0.3 | clip 开启时的三模态权重（和必须=1）已定稿 2026-11-13：文本为主体、对齐为新增关键判别力、图像结构分信息量最低；先上线攒账本再校准 |
+| `joint_gate.min_modality_score` | 0.30 | 短板木桶律：任一模态破此线 → 联合 remove |
+| `joint_gate.min_joint_score` | 0.55 | 联合总分下限 |
+| `image_text.clip.enabled` | false | CLIP 对齐门禁总开关：开启后打分器加载（缺 torch/模型 fail-fast 抛错，不静默降级） |
+| `image_text.clip.model_path` | data/models/cn-clip-vit-base-patch16 | 模型目录（config.json architectures 自适应 CN-CLIP / OpenAI CLIP） |
+| `image_text.clip.cos_lo` / `cos_hi` | 0.0 / 0.4（占位） | 余弦→[0,1] 归一化区间；正式值来自 `clip_bench` 标定（负样本 p95 / 正样本 p50），产物在 `data/clip/calibration_*.json` |
+| `image_text.pair_rules.orphan_policy` | hold | 缺图或缺文的对：hold（隔离待复核）/ drop；**不许静默放行** |
+| `image_text.pair_rules.min_caption_chars` | 5 | caption 过短 → drop(caption_too_short) |
+| `image_text.pair_rules.min_image_bytes` | 1024 | 图像字节过小 → drop(image_bytes_too_small) |
+| `image_text.dedup.image_exact_dup_policy` | collapse_by_source_trust | 同图不同文是否折叠；`keep_pairs_only` = 只折叠图+文全同的对 |
+
+边界纪律（改旋钮前必读）：
+
+- **文本五维阈值不在这里**——仍在 `configs/quality_policy.json`（各模态各管各的维度，multimodal 只管模态层权衡）；
+- **簇代表源信任序不在这里**——仍在 `configs/dedup_policy.json` 的 `canonical_policy`（事实单一来源）；
+- 改任何旋钮 = 改产物：配置进指纹，下游阶段自动重算（WP-01 D2 语义对多模态同样成立）；
+- metastore 侧 `modality` / `modality_pair_id` 追加列见 `sql/multimodal_extensions.sql`（只追加，历史行读出 NULL = 未检测，三态语义）。
+
+快速试拧（不落任何数据，纯函数层）：
+
+```bash
+python - <<'PY'
+import modalities
+from modalities.image import ImageTextSample
+modalities.load_all()
+cleaner = modalities.get("image", "cleaner")
+s = ImageTextSample(doc_id="d1", source="wiki", source_id="1",
+                    caption="一张测试用配对文本。", image_uri="s3://x/1.png",
+                    image_bytes_hash="a" * 64, image_bytes_len=2048)
+print(cleaner.clean(s))          # ('keep',)
+PY
+```
+
+## 新增模态开发规范（M11 起）
+
+按 `ARCHITECTURE.md` §7.4 的五步走，红线与自检：
+
+1. **schema 先行**：在 `schema/multimodal_schema.json` 追加该模态样本定义（载荷字段 + 校验），**不改 unified_schema**（0.3.2 被 golden record 钉死；升 spine 留待首个真实多模态源）；
+2. **插件包**：新建 `modalities/<m>/`，实现 `Sample` 子类 + 所需基类（`Collector`/`Cleaner`/`Deduper`/`QualityScorer`，见 `modalities/base.py` 模块头的判定协议），包 `__init__` 里 `register(...)`；
+3. **旋钮进配置**：阈值/权重一律登记 `configs/multimodal_policy.json`，插件代码零字面量（宪法第 6 条，有元测试风格先例）；
+4. **测试随行**：`tests/test_modalities.py` 追加接口冒烟 + 链路集成；预留能力（未实装的打分/去重）必须显式 `None`/`NotImplementedError` 并有测试钉住「不可用是可见的」；
+5. **核心层零改动**：`tests/test_modalities.py::test_core_layer_never_imports_modality_plugins` 守卫这条边界——核心层 import 插件即测试变红。
+
+纪律要点：模态专属依赖（图像解码器/音频指纹库/深度学习框架）只进插件包；未实装的读数是 `None`、未实装的接口调用显式报错——**不静默、不假装**。

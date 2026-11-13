@@ -34,6 +34,12 @@ MinIO（查询面）：     s3a://{bucket}/{zone}[/source={s}]/part-*.parquet
 **为什么分区只按 source、不再按日期**：本管道的阶段表按「处理代次」组织而非「到达日期」组织——
 代次由 manifest/runs 表达，目录表达的是查询裁剪维度。mix 之后配比维度取代来源维度成为主查询模式。
 
+**多模态扩展边界（M11 追记）**：多模态样本的 `modality` / `modality_pair_id` 是**追加列，不是新分区**——
+分区仍只按 source，本节语法零改动，**无宪法豁免**。理由：模态数少且与 source 正交，为省几次文件扫描
+引入第二分区维会让「阶段只追加不重排」的朴素性破产（对照 D4 的否决逻辑）。追加列的 DDL 与
+三态语义（历史行读出 NULL = 未检测）见 `sql/multimodal_extensions.sql`；样本契约见
+`schema/multimodal_schema.json`。
+
 ---
 
 ## 2. 新增文件与函数契约（`common/stage.py`，全部由 owner 实现）
