@@ -28,7 +28,7 @@
 | wiki 的 license/genre 等声明 | `configs/source_registry.json` 的 `sources.wiki` | CC BY-SA 4.0 / wiki | 新 ingest 的行；旧行不追溯 | force 重跑 ingest（golden record 测试会同步要求更新） |
 | 单条记录的 schema 字段 | `schema/unified_schema.json`（spine/stage_extensions）+ `ingest/wiki.py` 的 `PARQUET_SCHEMA` + golden 测试 `tests/test_ingest_wiki.py` | v0.3.2 | 全管道契约 | schema_version 递增 + 全链路重算 |
 | **多模态联合门禁权重/配对规则** | `configs/multimodal_policy.json`（joint_gate 与 image_text 两节） | text .6 / image .4（clip 关）；三模态 .5/.2/.3（clip 开）；孤儿 hold；caption≥5 字；图≥1024B | 图文配对样本的门禁与清洗；文本五维不受影响 | 重跑对应模态阶段即自动重算（配置进指纹） |
-| **CLIP 跨模态对齐门禁** | `configs/multimodal_policy.json` 的 `image_text.clip` 节 | enabled=false；cos_lo=0.0/cos_hi=0.4（占位，标定后回填）；模型 data/models/cn-clip-vit-base-patch16 | 开启后图文不匹配 → remove(low_quality_modality:cross_modal)；标定与评测见 `clip_bench/` | 切换 enabled = 配置变更 → 多模态阶段自动重算 |
+| **CLIP 跨模态对齐门禁** | `configs/multimodal_policy.json` 的 `image_text.clip` 节 | enabled=true；cos_lo=0.361/cos_hi=0.4942（中文在域标定回填）；模型 data/models/cn-clip-vit-base-patch16 | 开启后图文不匹配 → remove(low_quality_modality:cross_modal)；标定与评测见 `clip_bench/` | 切换 enabled = 配置变更 → 多模态阶段自动重算 |
 | 多模态样本 schema | `schema/multimodal_schema.json`（sample_base + 各模态扩展；unified_schema 不动） | v0.1.0 | 插件层样本契约 | 追加字段只增不改；升 spine 前先过 golden |
 | 容器栈（服务/端口/凭据） | `docker-compose.yml`；凭据 `.env`（不进 git） | 7 服务 | 基础设施层 | `docker compose up -d` 重建受影响服务 |
 | Metastore 的 S3A/DB 连接 | `docker-compose.yml` metastore 服务的 `SERVICE_OPTS` | 见文件内注释 | metastore | `docker compose up -d metastore --force-recreate` |
@@ -88,7 +88,7 @@ PY
 | `joint_gate.modality_weights_cross_modal` | text 0.5 / image 0.2 / cross_modal 0.3 | clip 开启时的三模态权重（和必须=1）已定稿 2026-11-13：文本为主体、对齐为新增关键判别力、图像结构分信息量最低；先上线攒账本再校准 |
 | `joint_gate.min_modality_score` | 0.30 | 短板木桶律：任一模态破此线 → 联合 remove |
 | `joint_gate.min_joint_score` | 0.55 | 联合总分下限 |
-| `image_text.clip.enabled` | false | CLIP 对齐门禁总开关：开启后打分器加载（缺 torch/模型 fail-fast 抛错，不静默降级） |
+| `image_text.clip.enabled` | true | CLIP 对齐门禁总开关：开启后打分器加载（缺 torch/模型 fail-fast 抛错，不静默降级） |
 | `image_text.clip.model_path` | data/models/cn-clip-vit-base-patch16 | 模型目录（config.json architectures 自适应 CN-CLIP / OpenAI CLIP） |
 | `image_text.clip.cos_lo` / `cos_hi` | 0.0 / 0.4（占位） | 余弦→[0,1] 归一化区间；正式值来自 `clip_bench` 标定（负样本 p95 / 正样本 p50），产物在 `data/clip/calibration_*.json` |
 | `image_text.pair_rules.orphan_policy` | hold | 缺图或缺文的对：hold（隔离待复核）/ drop；**不许静默放行** |

@@ -186,6 +186,23 @@ def _pair(source, n, caption, img=b"png-bytes-0001", img_len=4096):
 
 
 CAP1 = "这是一张展示古城墙全景的照片，图中可见完整的城垛结构与远处的山脉轮廓。拍摄视角为东南方向，光影层次分明。" 
+
+
+@pytest.fixture
+def clip_off(monkeypatch):
+    """v0 行为测试固定在 clip.enabled=false 的浅拷贝策略上。
+
+    生产配置已切 true（2026-11-13 中文在域标定后），但「关闭时对齐分=None、
+    双模态权重 pass」这条 v0 契约仍然必须成立——用 fixture 显式声明被测策略，
+    不依赖生产开关的当前值。
+    """
+    import copy
+    from modalities.image import paired
+
+    pol = copy.deepcopy(paired.mm_policy())
+    pol["image_text"]["clip"]["enabled"] = False
+    monkeypatch.setattr(paired, "mm_policy", lambda: pol)
+    return pol
 CAP2 = "图表展示了近十年城市人口的增减变化，横轴为年份，纵轴为常住人口数，趋势整体向上且在末端加速。"
 
 
@@ -201,7 +218,7 @@ def test_paired_cleaner_hold_orphan_drop_defects():
     assert cleaner.clean(_pair("wiki", 5, CAP1, img_len=10)) == ("drop", "image_bytes_too_small")
 
 
-def test_paired_scorer_alignment_null_and_joint_pass():
+def test_paired_scorer_alignment_null_and_joint_pass(clip_off):
     from modalities import get, load_all
 
     load_all()
@@ -305,7 +322,7 @@ def test_pair_metrics_and_card(tmp_path):
 
 # ---------------------------------------------------------------- 图文链路集成
 
-def test_image_text_pipeline_end_to_end_deterministic():
+def test_image_text_pipeline_end_to_end_deterministic(clip_off):
     """集成：清洗(孤儿hold) → 去重(精确折叠) → 联合打分+门禁；两次运行字节级一致。"""
     from modalities import get, load_all
 

@@ -16,14 +16,14 @@
       "note": "orphan_policy ∈ hold/drop：缺图或缺文的对的处置（hold=隔离待复核，默认）。caption 过短或图像字节过小 → drop"
     },
     "clip": {
-      "enabled": false,
-      "enabled_decision": "【已定稿 2026-11-13，owner 采纳建议值：暂置 false】理由：对齐分归一化区间 cos_lo/cos_hi 是在 CN-CLIP × Flickr8k 英文 caption（跨语言口径）上标定的，而 Lotus 生产语料是中文——用错误分布标定的阈值给中文图文对判门禁，正是实验报告 §5.3 记录的『模型-语言不匹配产生比没有门禁更危险的假读数』场景（CN-CLIP 英文硬负 AUC 0.4358，低于随机）。因此保持 false，待中文真实图文语料就位、重标定 cos_lo/cos_hi 后再切 true。切换只是改这一个布尔值 + 触发多模态阶段指纹重算，代码路径已全部就绪并被 tests/test_clip_integration.py 覆盖（含真实模型序关系门禁）。",
+      "enabled": true,
+      "enabled_decision": "【2026-11-13 二次定稿：切 true】理由：中文真实图文语料（HF 儿童绘本 240 对，人工中文句子；非机器翻译）完成 CN-CLIP 在域标定。标定集 360 对（正/易负/硬负各 1/3）：约登阈值 0.401（J=0.446，TPR=1.0 / FPR=0.554）；测试集 AUC easy=0.981、all=0.669、hard=0.356（低于随机——短句领域里语义近似对分不开，如实报）。cos_lo/cos_hi 已按同一公式回填（0.361/0.4942）；生产路径抽样报告：120 对真实中文图文 0 误杀（align p50=0.829，联合门禁 120/120 pass）。局限：硬负区分力弱意味着它只拦明显错配，不能当语义正确性判据；长文本领域上线后应增量复标（见 clip_bench/README.md 已知边界）。",
       "model_path": "data/models/cn-clip-vit-base-patch16",
       "backend_note": "config.json architectures 自适应：ChineseCLIPModel→中文CLIP（默认，Lotus 中文语料）；CLIPModel→OpenAI CLIP（英文 caption）",
       "max_text_len": 52,
-      "cos_lo": 0.3289,
-      "cos_hi": 0.523,
-      "note": "对齐分 = clip((cos−cos_lo)/(cos_hi−cos_lo), 0, 1)。cos_lo/cos_hi 已由真实数据标定回填（clip_bench/apply_calibration.py --tag cnclip_full，2026-11-13）：锚定 align(约登阈值 0.3871)=0.30（min_modality_score 门禁线）、align(pos_p95 0.523)=1.0。注意标定语料是 Flickr8k 英文 caption（跨语言口径，中文真实语料源缺失）——中文语料上线后须重标定，这也是 enabled 暂置 false 的直接原因（见 enabled_decision）。enabled=true 时缺 torch/模型加载失败会 fail-fast 抛错，不静默降级"
+      "cos_lo": 0.361,
+      "cos_hi": 0.4942,
+      "note": "对齐分 = clip((cos−cos_lo)/(cos_hi−cos_lo), 0, 1)。cos_lo/cos_hi 由真实中文图文对标定回填（clip_bench/zh_eval.py --tag zh_children → apply_calibration.py，2026-11-13）：约登阈值 0.401 锚定 align=0.30（min_modality_score 门禁线）、pos_p95 0.4942 锚定 align=1.0。标定语料为儿童绘本短句（真实人工中文），领域与生产长文本不同，长文本语料上线后应增量复标；跨语言英文旧标定已废弃。enabled=true 时缺 torch/模型加载失败会 fail-fast 抛错，不静默降级"
     },
     "dims": {
       "caption": {"note": "文本侧直连 quality/engine 五维打分（genre=default 带），不另立标准"},

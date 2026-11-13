@@ -1,6 +1,6 @@
 {
   "clean": {
-    "input_fingerprint": "832563b155e59521deef3cc23d21058c2dfea7692a725f1c5af5e105e489c5f1",
+    "input_fingerprint": "2c79f36ef17bcd321a622d3dcd57d9ec90941e3eb42f7443df4da547b8e49543",
     "output_hashes": {
       "source=news/part-00000.parquet": "71ded786cfd2b8989f7146e4267be17e9673d38b532be0fa393e38c95626a75f",
       "source=oscar/part-00000.parquet": "201f6e0b5c7c72b7b204340ea578a2bcf9c8f9506849a9643d9a1c5a84008dca",

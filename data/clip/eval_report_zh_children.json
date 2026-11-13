@@ -1,0 +1,106 @@
+{
+  "calibration": {
+    "caption_norm": "remove_all_whitespace",
+    "corpus": "svjack/Chinese_Children_Image_Captioning_Dataset_Split0",
+    "n_pairs": 360,
+    "neg_cos": {
+      "p1": 0.2121,
+      "p25": 0.3036,
+      "p5": 0.249,
+      "p50": 0.4483,
+      "p75": 0.479,
+      "p95": 0.4932,
+      "p99": 0.5076
+    },
+    "pos_cos": {
+      "p1": 0.4166,
+      "p25": 0.4562,
+      "p5": 0.4307,
+      "p50": 0.4719,
+      "p75": 0.4805,
+      "p95": 0.4942,
+      "p99": 0.5027
+    },
+    "suggest_cos_hi": 0.4942,
+    "suggest_cos_lo": 0.361,
+    "wall_seconds": 44.2,
+    "youden": {
+      "fpr": 0.5542,
+      "j": 0.4458,
+      "threshold": 0.400969,
+      "tpr": 1.0
+    }
+  },
+  "data": {
+    "caption_norm": "remove_all_whitespace",
+    "corpus_dir": "C:\\Users\\10393\\Desktop\\现在的项目\\项目一\\data\\clip\\zh_pairs",
+    "metadata_excluded_missing_files": [],
+    "n_calib": 120,
+    "n_pool_images": 240,
+    "n_test": 120,
+    "note": "标定/测试图集不相交；阈值只在标定集上定；短句领域口径，不外推长文本",
+    "source": "svjack/Chinese_Children_Image_Captioning_Dataset_Split0（真实儿童绘本插图+人工中文句子）",
+    "split_seed": 2026
+  },
+  "discrimination": {
+    "at_youden_threshold": {
+      "accuracy": 0.6444,
+      "confusion": {
+        "fn": 0,
+        "fp": 128,
+        "tn": 112,
+        "tp": 120
+      },
+      "f1": 0.6522,
+      "precision": 0.4839,
+      "recall": 1.0,
+      "threshold": 0.400969
+    },
+    "at_zero_threshold": {
+      "accuracy": 0.3333,
+      "confusion": {
+        "fn": 0,
+        "fp": 240,
+        "tn": 0,
+        "tp": 120
+      },
+      "f1": 0.5,
+      "precision": 0.3333,
+      "recall": 1.0,
+      "threshold": 0.0
+    },
+    "auc_all_negatives": 0.6686,
+    "auc_easy_only": 0.9811,
+    "auc_hard_only": 0.3561,
+    "n_pairs": {
+      "easy_neg": 120,
+      "hard_neg": 120,
+      "pos": 120
+    },
+    "wall_seconds": 41.3
+  },
+  "env": {
+    "backend": "cn_clip",
+    "device": "cuda",
+    "platform": "Windows-10-10.0.26200-SP0",
+    "python": "3.11.16"
+  },
+  "model": {
+    "path": "C:\\Users\\10393\\Desktop\\现在的项目\\项目一\\data\\models\\cn-clip-vit-base-patch16",
+    "tag": "zh_children"
+  },
+  "retrieval": {
+    "image2text_R@1": 0.2333,
+    "image2text_R@10": 1.0,
+    "image2text_R@5": 0.9,
+    "image2text_median_rank": 3,
+    "n_queries": 120,
+    "pool_note": "候选池=测试集图片与其唯一 caption（单参考口径）",
+    "text2image_R@1": 0.3167,
+    "text2image_R@10": 1.0,
+    "text2image_R@5": 0.95,
+    "text2image_median_rank": 3,
+    "wall_seconds": 9.4
+  },
+  "wall_seconds_total": 160.8
+}

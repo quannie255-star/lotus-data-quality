@@ -50,3 +50,4 @@ data/chain_log.txt
 # 本地临时目录（pip/pytest 落盘产物）
 pip-*/
 pytest-of-*/
+data/clip/zh_pairs/

@@ -75,23 +75,26 @@ def split_images(by_img: dict, n_calib: int, n_test: int, seed: int = 2026):
 
 
 def build_pairs(img_files: list[str], by_img: dict, seed: int = 2026,
-                caption_idx: int = 0) -> PairSet:
-    """正样本 + 易负样本（随机跨图配对）。每图取第 caption_idx 条 caption（默认第 1 条）。"""
+                caption_idx: int = 0, image_root: Path = FLICKR) -> PairSet:
+    """正样本 + 易负样本（随机跨图配对）。每图取第 caption_idx 条 caption（默认第 1 条）。
+
+    image_root 供其他语料（如中文图文对）复用同一构对口径。
+    """
     rng = random.Random(seed)
     images, captions, labels, kinds, ids = [], [], [], [], []
     others = list(img_files)
     for f in img_files:
         cap = by_img[f][caption_idx]
-        images.append(FLICKR / f); captions.append(cap); labels.append(1)
+        images.append(image_root / f); captions.append(cap); labels.append(1)
         kinds.append("pos"); ids.append(f)
         g = rng.choice([x for x in others if x != f])
-        images.append(FLICKR / f); captions.append(by_img[g][caption_idx])
+        images.append(image_root / f); captions.append(by_img[g][caption_idx])
         labels.append(0); kinds.append("easy_neg"); ids.append(f)
     return PairSet(images, captions, labels, kinds, ids)
 
 
 def add_hard_negatives(pairs: PairSet, scorer, by_img: dict,
-                       caption_idx: int = 0) -> PairSet:
+                       caption_idx: int = 0, image_root: Path = FLICKR) -> PairSet:
     """硬负样本挖掘：对每张图，在全测试池 caption 里找相似度最高的非配对 caption。
 
     计算口径：图 embedding × 全部候选 caption embedding 的余弦（scorer 批量接口），
@@ -123,7 +126,7 @@ def add_hard_negatives(pairs: PairSet, scorer, by_img: dict,
             outs.append(scorer.embed_images(batch, batch_size=chunk))
         return torch.cat(outs, dim=0)
 
-    ie = _embed_paths([FLICKR / f for f in uniq])
+    ie = _embed_paths([image_root / f for f in uniq])
     te = scorer.embed_texts(pool_caps, batch_size=512)
     sim = ie @ te.T   # (n_img, n_cap)，embedding 已 L2 归一 → 点积即余弦
 
@@ -132,7 +135,7 @@ def add_hard_negatives(pairs: PairSet, scorer, by_img: dict,
         row = sim[i].clone()
         row[i] = -2.0   # 排除自身配对（正样本）
         j = int(row.argmax())
-        hard_imgs.append(FLICKR / f)
+        hard_imgs.append(image_root / f)
         hard_caps.append(pool_caps[j])
 
     return PairSet(

@@ -76,6 +76,9 @@ download.pytorch.org 不可达（SSL 断）→ torch cu126 走 SJTU pytorch-whee
   中文生产语料上用错分布阈值 = 比没门禁更危险的假读数（CN-CLIP 英文硬负 AUC 0.4358 <
   随机）；待中文图文语料就位、重标定后再切 true（单布尔改动，代码路径已就绪并被
   test_clip_integration 覆盖）。
+  *（2026-11-13 二次定稿推翻此条：中文真实图文语料已就位并完成在域标定，
+  clip.enabled 已切 true——见 `clip_bench/开发日志.md` 同日条目与
+  `configs/multimodal_policy.json` 的 enabled_decision。）*
 - **三档配方数值定稿**：三档只在同一批旋钮上朝三个正交方向偏移（一档一变量可归因），
   幅度保守（方向对、能看出代价又不清空某层），全部在 KNOB_BOUNDS 内（validate_recipe
   拦越界）。每档理由见 configs/recipes.json 的 rationale 字段。
@@ -311,7 +314,13 @@ quality 记录（那些文档现已放行）——dedupe 键吸收了重放但�
 - `stream/producer.py`：确定性模拟行（doc_id 确定 → 重放被 dedup 折叠——流式幂等的身份解）
   → kafka-console-producer 通道（零客户端依赖）+ `consume_peek` 验证；
 - `dags/corpus_pipeline.py`：四源扇入→主链的 Airflow DAG（retries=2 指数退避，与 run_stage
-  幂等语义咬合）。⚠️ 激活需 airflow 容器挂仓库+装依赖（compose 未配，遗留）。
+  幂等语义咬合）。
+- **激活（2026-11-13 补记）**：compose 增加 `docker/airflow/Dockerfile`（运行时依赖 +
+  numpy 钉 1.26.4）与仓库挂载 `./:/opt/airflow/lotus` + `PYTHONPATH`。验证：
+  `airflow dags list` 解析出 10 任务、`dags show` 拓扑逐边核对、`tasks test clean` exit 0
+  且命中幂等缓存；Kafka 20 条确定性消息生产/消费 3 条，doc_id 跨轮重放一致。
+  证据 `data/metrics/orchestration_m9.json`，命令见 `dags/README.md` 与 `stream/README.md`。
+  首次 `tasks test` 曾因 numpy 2.x ABI 失败（`numpy.dtype size changed`），钉 1.26.4 后通过。
 
 ### M10 — dashboard
 - `dashboard/app.py`：Streamlit+DuckDB 四视图（漏斗/删除归因/质量分布/runs 审计），
@@ -324,7 +333,7 @@ dedup 参数（dedup_policy）/ 质量权重与门禁（quality_policy）/ 配�
 
 ### 遗留问题（M5-M10 合并）
 1. dedup 真实跑耗时（纯 py 单机基线，补录后即为 E2 对照点；Spark/Ray 版是 W4/W5 正戏）；
-2. Airflow DAG 激活（容器挂载+依赖）；Spark Structured Streaming 消费作业（kafka 包）；
+2. Spark Structured Streaming 消费作业（kafka 包；Kafka→Airflow 已激活，流消费仍未做）；
 3. benchmark 下载（ceval/CMMLU）接污染索引；4. judge 蒸馏（砍单序 2）；
 5. release 的 MinIO 发布（当前本地目录，mc cp 上桶为发布仪式）；6. changelog 重算净增 4 条之谜。
 
@@ -646,4 +655,4 @@ SMOKE M1: PASS ✅ (5/5)
 4. docstring 四段标准（参数/返回/异常/幂等）本轮覆盖 idempotent.py 与 wiki.py 公有函数，
    ids/runs/changelog/first_seen 的存量 docstring 于 M2 顺手补齐；
 5. eventLog-on-s3a 恢复方案（哨兵对象）在 backlog；
-6. Kafka 已 boot 未验收（W7/M9 的活）。
+6. Kafka 生产/消费已验收（2026-11-13，`data/metrics/orchestration_m9.json`）；流消费作业未做。

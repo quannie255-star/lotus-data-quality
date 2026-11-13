@@ -160,7 +160,10 @@ services:
   # DAG 是"代码"，丢了等于流水线没了；日志是排障证据，重启清空等于自断线索。
   # standalone 是官方开发模式（web + scheduler + triggerer），生产要拆开。
   airflow:
-    image: apache/airflow:2.10.4
+    build:
+      context: ./docker/airflow
+      dockerfile: Dockerfile
+    image: corpus/airflow:2.10.4-lotus
     restart: unless-stopped
     command: bash -c "airflow db migrate && airflow standalone"
     environment:
@@ -169,10 +172,13 @@ services:
       AIRFLOW__CORE__LOAD_EXAMPLES: "false"
       AIRFLOW__CORE__DAGS_FOLDER: /opt/airflow/dags
       AIRFLOW__WEBSERVER__EXPOSE_CONFIG: "true"
+      # 仓库挂载 + PYTHONPATH：DAG 里的 `python -m clean.run` 需要能 import 本仓库模块
+      PYTHONPATH: /opt/airflow/lotus
     ports:
       - "8081:8080"
     volumes:
       - ./dags:/opt/airflow/dags
+      - ./:/opt/airflow/lotus
       - airflow_logs:/opt/airflow/logs
     depends_on:
       postgres:

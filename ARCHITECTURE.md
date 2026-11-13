@@ -75,7 +75,7 @@ release  license 执法 + semver + 溯源卡   → data/release/v0.1/
 | `release/run.py` | data/mix | data/release/v{semver}/（part + provenance_card.yaml） | `next_version` `build_provenance_card`（license 执法） |
 | `downstream/ppl.py`+`run.py` | 四层语料 | data/downstream/report.json（四臂 ppl + CI） | `CharNgramLM` `bootstrap_ci`（N7：纯 py 5-gram） |
 | `stream/producer.py` | — | Kafka topic corpus-ingest | `build_messages` `produce`（doc_id 确定→重放被 dedup 折叠） |
-| `dags/corpus_pipeline.py` | — | Airflow DAG 定义 | 四源扇入→clean→…→downstream（激活条件见 DEVLOG M9） |
+| `dags/corpus_pipeline.py` | — | Airflow DAG（已挂载验证） | 四源扇入→clean→…→downstream（运行/验证命令见 `dags/README.md`） |
 | `dashboard/app.py` | data/ 本地镜像 | Streamlit 四视图 | `funnel` `removal_attribution` `quality_distribution` `runs_audit` |
 | `clean/pii.py` | 文本 | 命中/脱敏 | `detect` `redact`（GB11643 + Luhn 校验） |
 | `sql/raw_docs.sql` | — | 外部表 DDL + 验收查询 | — |
@@ -113,8 +113,8 @@ CLI 退出码 0/1/2/3。完整契约与五个决策记录（D1-D5）见 `docs/wp
 
 | 状态 | 内容 |
 |---|---|
-| ✅ 已完成 | 四源采集（wiki 为真实源；oscar/news 为 mock 适配器）· clean · dedup · quality · mix · release · 四臂 ppl · 指标卡 · dashboard（六 Tab + 三档配方 + 报告导出）· 多模态插件层文本绑定 · CLIP 对齐内核与评测标定 · P11 梯度筛选 · LoRA 因果链终证（文本）· 带约束旋钮自动搜索（`dashboard/autotune.py`） |
-| 🚧 建设中 | 中文真实图文语料与阈值重标定（`clip.enabled` 暂为 false）· 图文配对链路接入七层编排 · Kafka/Airflow 激活（代码与容器就绪，DAG 未挂载） |
+| ✅ 已完成 | 四源采集（wiki 为真实源；oscar/news 为 mock 适配器）· clean · dedup · quality · mix · release · 四臂 ppl · 指标卡 · dashboard（六 Tab + 三档配方 + 报告导出）· 多模态插件层文本绑定 · CLIP 对齐内核与评测标定 · 中文在域标定后 `clip.enabled=true`（120 对生产抽样 0 误杀；`clip_bench/zh_eval.py`）· Kafka→Airflow 激活（DAG 解析 10 任务、`tasks test clean` exit 0，`data/metrics/orchestration_m9.json`）· P11 梯度筛选 · LoRA 因果链终证（文本）· 带约束旋钮自动搜索（`dashboard/autotune.py`） |
+| 🚧 建设中 | 图文配对样本接入七层编排（当前由 `zh_eval --gate` 在生产路径抽样验证，尚未成为 DAG 阶段）· 跨模态去重 · 多模态 PII 脱敏 |
 | ⬜ 未做 | 多模态场景的因果链终证 · 感知哈希/音频指纹 · 音视频插件实装 |
 
 模块级契约与实验协议：`docs/blueprint.md` §2/§3/§4；工作包队列：`docs/backlog.md`。

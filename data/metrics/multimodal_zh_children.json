@@ -1,0 +1,37 @@
+{
+  "tag": "zh_children",
+  "mode": "production",
+  "corpus": "svjack/Chinese_Children_Image_Captioning_Dataset_Split0",
+  "n_samples": 120,
+  "seed": 2026,
+  "clip_config": {
+    "enabled": true,
+    "enabled_decision": "【2026-11-13 二次定稿：切 true】理由：中文真实图文语料（HF 儿童绘本 240 对，人工中文句子；非机器翻译）完成 CN-CLIP 在域标定。标定集 360 对（正/易负/硬负各 1/3）：约登阈值 0.401（J=0.446，TPR=1.0 / FPR=0.554）；测试集 AUC easy=0.981、all=0.669、hard=0.356（低于随机——短句领域里语义近似对分不开，如实报）。cos_lo/cos_hi 已按同一公式回填（0.361/0.4942）；生产路径抽样报告：120 对真实中文图文 0 误杀（align p50=0.829，联合门禁 120/120 pass）。局限：硬负区分力弱意味着它只拦明显错配，不能当语义正确性判据；长文本领域上线后应增量复标（见 clip_bench/README.md 已知边界）。",
+    "model_path": "data/models/cn-clip-vit-base-patch16",
+    "backend_note": "config.json architectures 自适应：ChineseCLIPModel→中文CLIP（默认，Lotus 中文语料）；CLIPModel→OpenAI CLIP（英文 caption）",
+    "max_text_len": 52,
+    "cos_lo": 0.361,
+    "cos_hi": 0.4942,
+    "note": "对齐分 = clip((cos−cos_lo)/(cos_hi−cos_lo), 0, 1)。cos_lo/cos_hi 由真实中文图文对标定回填（clip_bench/zh_eval.py --tag zh_children → apply_calibration.py，2026-11-13）：约登阈值 0.401 锚定 align=0.30（min_modality_score 门禁线）、pos_p95 0.4942 锚定 align=1.0。标定语料为儿童绘本短句（真实人工中文），领域与生产长文本不同，长文本语料上线后应增量复标；跨语言英文旧标定已废弃。enabled=true 时缺 torch/模型加载失败会 fail-fast 抛错，不静默降级"
+  },
+  "clip_enabled_in_production": true,
+  "joint_gate": 0.3,
+  "verdicts": {
+    "pass": 120,
+    "remove": 0
+  },
+  "reasons": {},
+  "alignment": {
+    "p5": 0.5521,
+    "p50": 0.8294,
+    "p95": 0.9717,
+    "mean": 0.801
+  },
+  "joint_score": {
+    "p5": 0.7745,
+    "p50": 0.9199,
+    "p95": 0.9643,
+    "mean": 0.8919
+  },
+  "removed_examples": []
+}

@@ -1,0 +1,71 @@
+{
+  "captured_at": "2026-11-13T21:11:00+08:00",
+  "environment": {
+    "airflow_image": "corpus/airflow:2.10.4-lotus",
+    "airflow_image_id": "sha256:2d61d0d87724",
+    "airflow_version": "2.10.4",
+    "python": "3.12.8",
+    "executor": "LocalExecutor",
+    "runtime_deps": {
+      "numpy": "1.26.4",
+      "pandas": "2.1.4",
+      "pyarrow": "23.0.1"
+    },
+    "note": "numpy 钉 1.x：Airflow 2.10 镜像自带 pandas 按 numpy 1.x 编译，装 pyarrow 会拉 numpy 2.x 导致 import pandas 报 dtype size changed（首次 tasks test 实测失败后修复）"
+  },
+  "kafka": {
+    "topic": "corpus-ingest",
+    "producer": "stream/producer.py:build_messages(n=20, seed=7)",
+    "payload_sha256": "c1310ec45c10687e3c159628f63148fafbcef6659491585fb2fd9ddeb47b97a1",
+    "produced": 20,
+    "consumed_peek": 3,
+    "consumed_doc_ids": [
+      "4a8be7cc629cfb88dc404756423531d5822d06f6adc9147d60d6d9076dcb255e",
+      "5a7db5aa740b2e0029597b9cb28ad70d5694527d6ea30b10625f55e25318af01",
+      "66281b73ddb28b43c9f820a60e054f72da5ef9c86efa03d07c1a0c49b34b72ab"
+    ],
+    "consumed_source_ids": ["sim-7-00000", "sim-7-00001", "sim-7-00002"],
+    "commands": {
+      "produce": "docker compose exec -T kafka /opt/bitnami/kafka/bin/kafka-console-producer.sh --bootstrap-server localhost:9092 --topic corpus-ingest < data/.kafka_msgs.jsonl",
+      "consume": "docker compose exec -T kafka /opt/bitnami/kafka/bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic corpus-ingest --from-beginning --max-messages 3 --timeout-ms 8000"
+    },
+    "replay_evidence": "同一批消息在上一轮生产时首个 doc_id 即 4a8be7cc…，本轮重放完全一致——doc_id 由 (source, source_id) 确定性生成，Kafka 层不去重，重放由下游 dedup 折叠",
+    "exit_codes": {"producer": 0, "consumer": 0}
+  },
+  "airflow": {
+    "dag_id": "corpus_pipeline",
+    "fileloc": "/opt/airflow/dags/corpus_pipeline.py",
+    "mounted_from": "./dags:/opt/airflow/dags；仓库根 ./:/opt/airflow/lotus + PYTHONPATH=/opt/airflow/lotus",
+    "is_paused": true,
+    "n_tasks": 10,
+    "tasks": [
+      "ingest_wiki", "ingest_oscar", "ingest_news", "ingest_pdf",
+      "clean", "dedup", "quality", "mix", "release", "downstream"
+    ],
+    "topology_edges": [
+      ["ingest_wiki", "clean"],
+      ["ingest_oscar", "clean"],
+      ["ingest_news", "clean"],
+      ["ingest_pdf", "clean"],
+      ["clean", "dedup"],
+      ["dedup", "quality"],
+      ["quality", "mix"],
+      ["mix", "release"],
+      ["release", "downstream"]
+    ],
+    "topology_evidence": "docker compose exec -T airflow airflow dags show corpus_pipeline（dot 输出逐边核对）",
+    "task_test": {
+      "task_id": "clean",
+      "logical_date": "2026-11-13",
+      "command": "docker compose exec -T airflow airflow tasks test corpus_pipeline clean 2026-11-13",
+      "exit_code": 0,
+      "state": "SUCCESS",
+      "cached": true,
+      "executed_cwd": "/opt/airflow/lotus",
+      "executed_command": "python -m clean.run",
+      "run_id": "clean-20261113T131054Z-6fad8e7c",
+      "note": "任务在容器内以仓库根为 cwd 执行模块入口；cached=true 即 run_stage 幂等缓存命中——Airflow 重试/重跑不会重复计算"
+    },
+    "bound_evidence": "首次 tasks test 因 numpy 2.x ABI 失败（ValueError: numpy.dtype size changed）；Dockerfile 钉 numpy==1.26.4 重建后同一命令 exit 0。该失败与修复是容器运行证据的一部分，不静默抹掉"
+  }
+}
